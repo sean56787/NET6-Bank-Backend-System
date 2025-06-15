@@ -1,6 +1,4 @@
-﻿//using System.Collections.Generic;
-//using System.Linq;
-namespace DotNetSandbox.Models
+﻿namespace DotNetSandbox.Models
 {
     public class UserStore
     {
@@ -10,7 +8,7 @@ namespace DotNetSandbox.Models
             new User {Id = 2, Username = "test", Password = "456",Isverified = false},
         };
 
-        public static User? FindByUsername(string username)
+        public static User? FindByUsername(string username) // 找第一筆符合的 找不到 => 回傳 null
         {
             return Users.FirstOrDefault(u => u.Username == username);
         }
