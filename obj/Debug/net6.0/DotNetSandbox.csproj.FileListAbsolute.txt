@@ -56,3 +56,10 @@ D:\全端練習\DotNetSandbox\DotNetSandbox\DotNetSandbox\bin\Debug\net6.0\runti
 D:\全端練習\DotNetSandbox\DotNetSandbox\DotNetSandbox\bin\Debug\net6.0\runtimes\win-x64\native\e_sqlite3.dll
 D:\全端練習\DotNetSandbox\DotNetSandbox\DotNetSandbox\bin\Debug\net6.0\runtimes\win-x86\native\e_sqlite3.dll
 D:\全端練習\DotNetSandbox\DotNetSandbox\DotNetSandbox\obj\Debug\net6.0\DotNetSandbox.csproj.CopyComplete
+D:\全端練習\DotNetSandbox\DotNetSandbox\DotNetSandbox\bin\Debug\net6.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+D:\全端練習\DotNetSandbox\DotNetSandbox\DotNetSandbox\bin\Debug\net6.0\Microsoft.IdentityModel.JsonWebTokens.dll
+D:\全端練習\DotNetSandbox\DotNetSandbox\DotNetSandbox\bin\Debug\net6.0\Microsoft.IdentityModel.Logging.dll
+D:\全端練習\DotNetSandbox\DotNetSandbox\DotNetSandbox\bin\Debug\net6.0\Microsoft.IdentityModel.Protocols.dll
+D:\全端練習\DotNetSandbox\DotNetSandbox\DotNetSandbox\bin\Debug\net6.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+D:\全端練習\DotNetSandbox\DotNetSandbox\DotNetSandbox\bin\Debug\net6.0\Microsoft.IdentityModel.Tokens.dll
+D:\全端練習\DotNetSandbox\DotNetSandbox\DotNetSandbox\bin\Debug\net6.0\System.IdentityModel.Tokens.Jwt.dll

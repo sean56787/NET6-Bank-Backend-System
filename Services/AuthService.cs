@@ -1,4 +1,8 @@
-﻿using DotNetSandbox.Data;
+﻿using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using System.Text;
+using DotNetSandbox.Data;
 using DotNetSandbox.Models;
 
 namespace DotNetSandbox.Services
@@ -31,10 +35,10 @@ namespace DotNetSandbox.Services
             return true;
         }
 
-        public bool Login(string username, string password)
+        public User Login(string username, string password)
         {
             var user = _context.Users.FirstOrDefault(u => u.Username == username);
-            return user != null && user.Password == password && user.Isverified;
+            return user;
         }
 
         public bool Verify(string username)
@@ -44,6 +48,29 @@ namespace DotNetSandbox.Services
             user.Isverified = true;
             _context.SaveChanges(); // 寫入
             return true;
+        }
+
+        public string GenerateToken(User user)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes("this_is_a_very_long_secret_key_123456");
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, user.Username),
+                    new Claim(ClaimTypes.Role, user.Username == "admin" ? "admin" : "user")
+                }),
+                Expires = DateTime.UtcNow.AddHours(1),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
+
+        public List<User> GetAllUsers()
+        {
+            return _context.Users.ToList();
         }
     }
 }

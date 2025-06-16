@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;     // ControllerBase
 using DotNetSandbox.Services;       // register / login / verify
+using Microsoft.AspNetCore.Authorization;
 using DotNetSandbox.Data;
 using DotNetSandbox.Models;
 namespace DotNetSandbox.Controllers
@@ -13,7 +14,6 @@ namespace DotNetSandbox.Controllers
 
         public UserController(AuthService authService)
         {
-            
             _authService = authService;
         }
 
@@ -28,10 +28,11 @@ namespace DotNetSandbox.Controllers
         [HttpPost("login")]
         public IActionResult Login(string username, string password)
         {
-            var success = _authService.Login(username, password);       //檢查是否為已驗證帳戶
-            if (!success) return Conflict(new { error = "invalid account or not verified" });
+            var user = _authService.Login(username, password);       //檢查是否為已驗證帳戶
+            if (user == null || !user.Isverified) return Conflict(new { error = "invalid account or not verified" });
 
-            return Ok(new { msg = "login success" });
+            var token = _authService.GenerateToken(user);
+            return Ok(new {token});
         }
 
         [HttpPost("verify")]
@@ -41,6 +42,14 @@ namespace DotNetSandbox.Controllers
             if (!success) return Conflict(new { error = "user not found" });
 
             return Ok(new { msg = "user verified, pls login" });
+        }
+
+        [Authorize(Roles = "admin")]
+        [HttpGet]
+        public IActionResult GetAllUsers()
+        {
+            var users = _authService.GetAllUsers();
+            return Ok(users);
         }
     }
 }

@@ -1,12 +1,32 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using DotNetSandbox.Data;
 using DotNetSandbox.Services;
 using Microsoft.EntityFrameworkCore;
 
+var key = Encoding.ASCII.GetBytes("this_is_a_very_long_secret_key_123456");
+
 var builder = WebApplication.CreateBuilder(args); // 初始化ASP.NET Core App
 
 builder.Services.AddDbContext<AppDbContext>(options => { options.UseSqlite("Data source=user.db"); }); // 有人需要AppDbContext時自動注入
-
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = false,
+        ValidateAudience = false
+    };
+});
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
@@ -27,7 +47,8 @@ var app = builder.Build();
 
 app.UseHttpsRedirection(); // 強制將 HTTP 轉為 HTTPS
 
-// app.UseAuthorization();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers(); // 讓[ApiController] 的 Controller 路由生效
 
