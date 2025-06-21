@@ -4,19 +4,22 @@ using System.Security.Claims;
 using System.Text;
 using DotNetSandbox.Data;
 using DotNetSandbox.Models;
+using DotNetSandbox.Models.DTOs;
 
 namespace DotNetSandbox.Services
 {
     public class AuthService
     {
         private readonly AppDbContext _context;
+        private readonly IConfiguration _config;
 
-        public AuthService(AppDbContext context)
+        public AuthService(AppDbContext context, IConfiguration config)
         {
             _context = context;
+            _config = config;
         }
 
-        public bool Register(string username, string password)
+        public bool Register(string? username, string? password, string? email)
         {
             if(_context.Users.Any(u => u.Username == username))
             {
@@ -27,6 +30,7 @@ namespace DotNetSandbox.Services
             {
                 Username = username,
                 Password = password,
+                Email = email,
                 Isverified = false,
             };
 
@@ -35,9 +39,17 @@ namespace DotNetSandbox.Services
             return true;
         }
 
-        public User Login(string username, string password)
+        public User? Login(string? username, string? password, string? email)
         {
-            var user = _context.Users.FirstOrDefault(u => u.Username == username);
+            User? user = null;
+
+            if (!string.IsNullOrWhiteSpace(username))
+                user = _context.Users.FirstOrDefault(u => u.Username == username);
+            else if (!string.IsNullOrWhiteSpace(email))
+                user = _context.Users.FirstOrDefault(u => u.Email == email);
+
+            if (user == null) return null;
+            if (user.Password != password) return null;
             return user;
         }
 
@@ -52,25 +64,39 @@ namespace DotNetSandbox.Services
 
         public string GenerateToken(User user)
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes("this_is_a_very_long_secret_key_123456");
+            var key = Encoding.ASCII.GetBytes(_config["Jwt:Key"]);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[]
                 {
                     new Claim(ClaimTypes.Name, user.Username),
-                    new Claim(ClaimTypes.Role, user.Username == "admin" ? "admin" : "user")
+                    new Claim(ClaimTypes.Role, user.Role.ToString())
                 }),
+                Issuer = _config["Jwt:Issuer"],
+                Audience = _config["Jwt:Audience"],
                 Expires = DateTime.UtcNow.AddHours(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
+            var tokenString = tokenHandler.WriteToken(token);
+
+            return tokenString;
         }
 
-        public List<User> GetAllUsers()
+        public List<UserDTO> GetAllUsers()
         {
-            return _context.Users.ToList();
+            var allUsers = _context.Users.Select(u => new UserDTO
+            {
+                Id = u.Id,
+                Username = u.Username,
+                Email = u.Email,
+                Role = u.Role.ToString(),
+                IsVerified = u.Isverified
+            }).ToList();
+
+            return allUsers;
         }
     }
 }

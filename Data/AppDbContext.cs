@@ -12,5 +12,24 @@ namespace DotNetSandbox.Data
 
         }
 
+        
+        protected override void OnModelCreating(ModelBuilder modelBuilder) //modelBuilder => Entity Framework Core 自定義資料模型設定
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<User>().Property(u => u.Role).HasConversion<string>(); // 後續所有_context.add() 在遇到 User.Role都會用字串儲存
+            /*
+            modelBuilder.Entity<User>().HasData(new          //Migration階段就會執行，要用匿名物件不讓Role變成int
+            {
+                Id = 1,
+                Username = "admin",
+                Password = "admin-password",
+                Isverified = true,
+                Role = User.UserRole.admin.ToString(),
+                Email = "admin@gmail.com"
+            });
+            */
+        }
+        
     }
 }

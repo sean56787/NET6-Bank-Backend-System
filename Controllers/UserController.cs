@@ -2,7 +2,8 @@
 using DotNetSandbox.Services;       // register / login / verify
 using Microsoft.AspNetCore.Authorization;
 using DotNetSandbox.Data;
-using DotNetSandbox.Models;
+using DotNetSandbox.Models.DTOs;
+
 namespace DotNetSandbox.Controllers
 {
     [ApiController]                 // Web API Controller
@@ -18,38 +19,66 @@ namespace DotNetSandbox.Controllers
         }
 
         [HttpPost("register")]
-        public IActionResult Register(string username, string password)
+        public IActionResult Register([FromBody] RegisterRequest req)
         {
-            var success = _authService.Register(username, password);
-            if (!success) return Conflict(new { error = "user already exists" });
-            return Ok(new { msg = "user registered" });
+            try
+            {
+                var success = _authService.Register(req.Username, req.Password, req.Email);
+                if (!success) return Conflict(new { error = "user already exists" });
+                return Ok(new { msg = "user registered" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [HttpPost("login")]
-        public IActionResult Login(string username, string password)
+        public IActionResult Login([FromBody] LoginRequest req)
         {
-            var user = _authService.Login(username, password);       //檢查是否為已驗證帳戶
-            if (user == null || !user.Isverified) return Conflict(new { error = "invalid account or not verified" });
+            try
+            {
+                var user = _authService.Login(req.Username, req.Password, req.Email);       //檢查是否為已驗證帳戶
+                if (user == null || !user.Isverified) return Conflict(new { error = "invalid account or not verified" });
 
-            var token = _authService.GenerateToken(user);
-            return Ok(new {token});
+                var token = _authService.GenerateToken(user);
+                return Ok(new { token });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [HttpPost("verify")]
         public IActionResult Verify(string username)
         {
-            var success = _authService.Verify(username);
-            if (!success) return Conflict(new { error = "user not found" });
-
-            return Ok(new { msg = "user verified, pls login" });
+            try
+            {
+                var success = _authService.Verify(username);
+                if (!success) return Conflict(new { error = "user not found" });
+                return Ok(new { msg = "user verified, pls login" });
+            } catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [Authorize(Roles = "admin")]
         [HttpGet]
         public IActionResult GetAllUsers()
         {
-            var users = _authService.GetAllUsers();
-            return Ok(users);
+            try
+            {
+                var usersDTO = _authService.GetAllUsers();
+                if (usersDTO != null)
+                    return Ok(usersDTO);
+                else return NotFound();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
     }
 }
