@@ -21,15 +21,16 @@ namespace DotNetSandbox.Services
 
         public bool Register(string? username, string? password, string? email)
         {
-            if(_context.Users.Any(u => u.Username == username))
-            {
+            bool result = _context.Users.Any(u => u.Username == username) || _context.Users.Any(u => u.Email == email);
+            if (result)
                 return false;
-            }
+
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
 
             var newUser = new User
             {
                 Username = username,
-                Password = password,
+                Password = hashedPassword,
                 Email = email,
                 Isverified = false,
             };
@@ -49,7 +50,7 @@ namespace DotNetSandbox.Services
                 user = _context.Users.FirstOrDefault(u => u.Email == email);
 
             if (user == null) return null;
-            if (user.Password != password) return null;
+            if (!BCrypt.Net.BCrypt.Verify(password, user.Password)) return null;
             return user;
         }
 
@@ -70,7 +71,8 @@ namespace DotNetSandbox.Services
                 Subject = new ClaimsIdentity(new[]
                 {
                     new Claim(ClaimTypes.Name, user.Username),
-                    new Claim(ClaimTypes.Role, user.Role.ToString())
+                    new Claim(ClaimTypes.Role, user.Role.ToString()),
+                    new Claim(ClaimTypes.Email, user.Email)
                 }),
                 Issuer = _config["Jwt:Issuer"],
                 Audience = _config["Jwt:Audience"],
@@ -85,9 +87,27 @@ namespace DotNetSandbox.Services
             return tokenString;
         }
 
+        public UserDTO? GetUser(string? username, string? email)
+        {
+            var userDTO = _context.Users.
+                Where(u => u.Username == username || u.Email == email).
+                Select(u => new UserDTO 
+                { 
+                    Id = u.Id,
+                    Username = u.Username,
+                    Role = u.Role.ToString(),
+                    Email = u.Email 
+                }).FirstOrDefault();
+
+            if (userDTO == null)
+                return null;
+
+            return userDTO;
+        }
+
         public List<UserDTO> GetAllUsers()
         {
-            var allUsers = _context.Users.Select(u => new UserDTO
+            var usersDTO = _context.Users.Select(u => new UserDTO
             {
                 Id = u.Id,
                 Username = u.Username,
@@ -96,7 +116,7 @@ namespace DotNetSandbox.Services
                 IsVerified = u.Isverified
             }).ToList();
 
-            return allUsers;
+            return usersDTO;
         }
     }
 }

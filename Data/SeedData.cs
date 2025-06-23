@@ -10,11 +10,13 @@ namespace DotNetSandbox.Data
             context.Database.EnsureCreated();
             if (!context.Users.Any(u => u.Username == "admin"))
             {
+                var hashedPassword = BCrypt.Net.BCrypt.HashPassword("admin-password");
+
                 context.Users.Add(new User
                 {
                     Id = 1,
                     Username = "admin",
-                    Password = "admin-password",
+                    Password = hashedPassword,
                     Isverified = true,
                     Role = User.UserRole.admin,
                     Email = "admin@gmail.com"

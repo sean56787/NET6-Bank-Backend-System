@@ -3,10 +3,11 @@ using DotNetSandbox.Services;       // register / login / verify
 using Microsoft.AspNetCore.Authorization;
 using DotNetSandbox.Data;
 using DotNetSandbox.Models.DTOs;
+using System.Security.Claims;
 
 namespace DotNetSandbox.Controllers
 {
-    [ApiController]                 // Web API Controller
+    [ApiController]                 // 自動處理 ModelState 錯誤驗證
     [Route("api/[controller]")]     // api/user
     public class UserController : ControllerBase
     {
@@ -24,7 +25,7 @@ namespace DotNetSandbox.Controllers
             try
             {
                 var success = _authService.Register(req.Username, req.Password, req.Email);
-                if (!success) return Conflict(new { error = "user already exists" });
+                if (!success) return Conflict(new { error = "user || email already exists" });
                 return Ok(new { msg = "user registered" });
             }
             catch (Exception ex)
@@ -64,18 +65,82 @@ namespace DotNetSandbox.Controllers
             }
         }
 
-        [Authorize(Roles = "admin")]
-        [HttpGet]
+        [Authorize]
+        [HttpGet("get-user")]
+        public IActionResult GetUser([FromQuery] GetUserRequest req)
+        {
+            try
+            {
+                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+                if (userRole != "admin")
+                {
+                    return StatusCode(403, new { error = "you have no permission to use this api" });
+                }
+
+                var usersDTO = _authService.GetUser(req.Username, req.Email);
+                if (usersDTO != null)
+                    return Ok(usersDTO);
+
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [Authorize]
+        [HttpGet("get-all-users")]
         public IActionResult GetAllUsers()
         {
             try
             {
+                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+                if(userRole != "admin")
+                {
+                    return StatusCode(403, new { error = "you have no permission to use this api" });
+                }
+
                 var usersDTO = _authService.GetAllUsers();
                 if (usersDTO != null)
                     return Ok(usersDTO);
                 else return NotFound();
             }
             catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [Authorize]
+        [HttpGet("who-am-i")]
+        public IActionResult WhoAmI()
+        {
+            try
+            {
+                if (User?.Identity?.IsAuthenticated != true) // JWT 是否驗證通過
+                {
+                    return Unauthorized();
+                }
+
+                var username = User.Identity.Name;
+                var role = User.FindFirst(ClaimTypes.Role)?.Value;
+                var email = User.FindFirst(ClaimTypes.Email)?.Value;
+
+                if(string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(role) || string.IsNullOrWhiteSpace(email))
+                    return Unauthorized();
+                
+                return Ok(new
+                {
+                    msg = $"Hello, {username}",
+                    data = new 
+                    {
+                        Role = role,
+                        Email = email
+                    }
+                });
+                
+            } catch (Exception ex)
             {
                 return StatusCode(500, ex.Message);
             }

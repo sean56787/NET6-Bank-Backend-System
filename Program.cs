@@ -15,7 +15,7 @@ builder.Services.AddDbContext<AppDbContext>(options => { options.UseSqlite("Data
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddAuthentication(options =>
 {
-    // 告訴 ASP.NET Core 使用 Bearer Token 驗證
+    // 告訴 ASP.NET Core 使用 Bearer Token 驗證用戶JWT
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(options =>
@@ -23,11 +23,11 @@ builder.Services.AddAuthentication(options =>
     options.RequireHttpsMetadata = false;
     options.SaveToken = true;   // 解析完 Token 自動存進 HttpContext.User
     options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuerSigningKey = true,    // 檢查簽章金鑰
+    { 
         IssuerSigningKey = new SymmetricSecurityKey(key),
         ValidateIssuer = false,
-        ValidateAudience = false
+        ValidateAudience = false,
+        ValidateIssuerSigningKey = true,    // 檢查簽章金鑰
     };
 });
 

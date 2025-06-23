@@ -63,3 +63,4 @@ D:\全端練習\DotNetSandbox\DotNetSandbox\DotNetSandbox\bin\Debug\net6.0\Micro
 D:\全端練習\DotNetSandbox\DotNetSandbox\DotNetSandbox\bin\Debug\net6.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
 D:\全端練習\DotNetSandbox\DotNetSandbox\DotNetSandbox\bin\Debug\net6.0\Microsoft.IdentityModel.Tokens.dll
 D:\全端練習\DotNetSandbox\DotNetSandbox\DotNetSandbox\bin\Debug\net6.0\System.IdentityModel.Tokens.Jwt.dll
+D:\全端練習\DotNetSandbox\DotNetSandbox\DotNetSandbox\bin\Debug\net6.0\BCrypt.Net-Next.dll
