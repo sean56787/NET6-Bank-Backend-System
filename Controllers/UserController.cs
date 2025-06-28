@@ -66,6 +66,51 @@ namespace DotNetSandbox.Controllers
         }
 
         [Authorize]
+        [HttpPut("update-user")]
+        public IActionResult UpdateUser([FromBody] UpdateUserRequest req)
+        {
+            try
+            {
+                var userDTO = _authService.UpdateUser(req);
+                if (userDTO != null)
+                    return Ok(new { msg = "user update success", userDTO });
+                else
+                    return BadRequest();
+            } catch (Exception exp)
+            {
+                return StatusCode(500, exp.Message);
+            }
+        }
+
+        [Authorize]
+        [HttpPost("create-user")]
+        public IActionResult CreateUser([FromBody] CreateUserRequest req)
+        {
+            try
+            {
+                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+                if(userRole != "admin")
+                {
+                    return StatusCode(403, new { error = "you have to permission to use this api" });
+                }
+
+                var userDTO = _authService.CreateUser(req.Username, req.Password, req.Email, req.Role);
+                if(userDTO != null)
+                {
+                    return Ok(new { msg = "user created", userDTO });
+                }
+                else
+                {
+                    return BadRequest();
+                }
+            } catch (Exception exp)
+            {
+                return StatusCode(500, exp.Message);
+            }
+        }
+
+
+        [Authorize]
         [HttpGet("get-user")]
         public IActionResult GetUser([FromQuery] GetUserRequest req)
         {

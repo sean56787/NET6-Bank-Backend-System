@@ -5,6 +5,7 @@ using System.Text;
 using DotNetSandbox.Data;
 using DotNetSandbox.Models;
 using DotNetSandbox.Models.DTOs;
+using DotNetSandbox.Migrations;
 
 namespace DotNetSandbox.Services
 {
@@ -85,6 +86,76 @@ namespace DotNetSandbox.Services
             var tokenString = tokenHandler.WriteToken(token);
 
             return tokenString;
+        }
+
+        public UserDTO? UpdateUser(UpdateUserRequest req)
+        {
+            var user = _context.Users.FirstOrDefault(u => u.Username == req.Username || u.Email == req.Email);
+
+            if(user == null)
+            {
+                return null;
+            }
+
+            if (req.Username != null)
+                user.Username = req.Username;
+
+            if (req.Email != null)
+                user.Email = req.Email;
+
+            if (req.Password != null)
+            {
+                var newHashedPassword = BCrypt.Net.BCrypt.HashPassword(req.Password);
+                user.Password = newHashedPassword;
+            }
+                
+            if (req.Role != null)
+                user.Role = (User.UserRole)req.Role;
+
+            if (req.Isverified != null)
+                user.Isverified = (bool)req.Isverified;
+
+            _context.SaveChanges();
+
+            var updatedUserDTO = new UserDTO
+            {
+                Username = user.Username,
+                Id = user.Id,
+                Role = user.Role.ToString(),
+                Email = user.Email
+            };
+
+            return updatedUserDTO;
+        }
+        public UserDTO? CreateUser(string? username, string? password, string? email, User.UserRole? role)
+        {
+            var result = _context.Users.Any(u => u.Username == username || u.Email == email);
+            if (result)
+                return null;
+
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
+
+            var newUser = new User
+            {
+                Username = username,
+                Password = hashedPassword,
+                Email = email,
+                Isverified = false,
+                Role = (User.UserRole)role,
+            };
+
+            _context.Users.Add(newUser);
+            _context.SaveChanges();
+
+            var userDTO = new UserDTO
+            {
+                Username = newUser.Username,
+                Id = newUser.Id,
+                Role = newUser.Role.ToString(),
+                Email = newUser.Email
+            };
+
+            return userDTO;
         }
 
         public UserDTO? GetUser(string? username, string? email)
