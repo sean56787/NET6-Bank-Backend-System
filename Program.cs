@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DotNetSandbox.Data;
 using DotNetSandbox.Services;
+using DotNetSandbox.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using DotNetSandbox.Models;
 
@@ -12,7 +13,10 @@ var jwtConfig = builder.Configuration.GetSection("Jwt");
 var key = Encoding.ASCII.GetBytes(jwtConfig["Key"]);
 
 builder.Services.AddDbContext<AppDbContext>(options => { options.UseSqlite("Data source=user.db"); }); // 有人需要AppDbContext時自動注入
-builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<AuthService>(); // TODO: 改自動注入
+builder.Services.AddScoped<AdminService>(); // TODO: 改自動注入
+builder.Services.AddScoped<UserService>(); // TODO: 改自動注入
+builder.Services.AddScoped<IBalanceService, BalanceService>(); // DI
 builder.Services.AddAuthentication(options =>
 {
     // 告訴 ASP.NET Core 使用 Bearer Token 驗證用戶JWT

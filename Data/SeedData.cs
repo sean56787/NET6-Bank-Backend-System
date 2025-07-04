@@ -17,7 +17,7 @@ namespace DotNetSandbox.Data
                     Id = 1,
                     Username = "admin",
                     Password = hashedPassword,
-                    Isverified = true,
+                    IsVerified = true,
                     Role = User.UserRole.admin,
                     Email = "admin@gmail.com"
                 });

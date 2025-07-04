@@ -4,8 +4,8 @@
     {
         public static List<User> Users = new()
         {
-            new User {Id = 1, Username = "admin", Password = "123", Isverified = true},
-            new User {Id = 2, Username = "test", Password = "456",Isverified = false},
+            new User {Id = 1, Username = "admin", Password = "123", IsVerified = true},
+            new User {Id = 2, Username = "test", Password = "456",IsVerified = false},
         };
 
         public static User? FindByUsername(string username) // 找第一筆符合的 找不到 => 回傳 null
