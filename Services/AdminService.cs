@@ -3,10 +3,10 @@ using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Text;
 using DotNetSandbox.Data;
-using DotNetSandbox.Models;
 using DotNetSandbox.Models.DTOs.Input;
 using DotNetSandbox.Models.DTOs.Output;
 using DotNetSandbox.Services.CustomResponse;
+using DotNetSandbox.Models.Data;
 
 namespace DotNetSandbox.Services
 {

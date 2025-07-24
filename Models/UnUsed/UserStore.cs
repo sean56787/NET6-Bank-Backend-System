@@ -1,4 +1,6 @@
-﻿namespace DotNetSandbox.Models
+﻿using DotNetSandbox.Models.Data;
+
+namespace DotNetSandbox.Models.UnUsed
 {
     public class UserStore
     {

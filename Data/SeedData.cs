@@ -1,4 +1,4 @@
-﻿using DotNetSandbox.Models;
+﻿using DotNetSandbox.Models.Data;
 using static System.Formats.Asn1.AsnWriter;
 
 namespace DotNetSandbox.Data
@@ -7,7 +7,7 @@ namespace DotNetSandbox.Data
     {
         public static void Initialize(AppDbContext context)
         {
-            context.Database.EnsureCreated();
+            //context.Database.EnsureCreated();
             if (!context.Users.Any(u => u.Username == "admin"))
             {
                 var hashedPassword = BCrypt.Net.BCrypt.HashPassword("admin-password");

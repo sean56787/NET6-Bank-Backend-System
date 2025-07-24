@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using DotNetSandbox.Models.Data;
 
 namespace DotNetSandbox.Models.DTOs.Input
 {

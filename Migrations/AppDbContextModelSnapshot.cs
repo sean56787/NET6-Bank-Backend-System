@@ -17,7 +17,7 @@ namespace DotNetSandbox.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.25");
 
-            modelBuilder.Entity("DotNetSandbox.Models.BalanceLog", b =>
+            modelBuilder.Entity("DotNetSandbox.Models.Data.BalanceLog", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -45,10 +45,12 @@ namespace DotNetSandbox.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("BalanceLogs");
                 });
 
-            modelBuilder.Entity("DotNetSandbox.Models.User", b =>
+            modelBuilder.Entity("DotNetSandbox.Models.Data.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -75,9 +77,6 @@ namespace DotNetSandbox.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -85,6 +84,22 @@ namespace DotNetSandbox.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("DotNetSandbox.Models.Data.BalanceLog", b =>
+                {
+                    b.HasOne("DotNetSandbox.Models.Data.User", "User")
+                        .WithMany("BalanceLogs")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DotNetSandbox.Models.Data.User", b =>
+                {
+                    b.Navigation("BalanceLogs");
                 });
 #pragma warning restore 612, 618
         }

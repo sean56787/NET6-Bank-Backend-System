@@ -5,7 +5,7 @@ using DotNetSandbox.Data;
 using DotNetSandbox.Services;
 using DotNetSandbox.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using DotNetSandbox.Models;
+using DotNetSandbox.Models.Data;
 
 var builder = WebApplication.CreateBuilder(args); // 初始化ASP.NET Core App
 
@@ -47,6 +47,13 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
 // Add services to the container.
 
 builder.Services.AddControllers(); // 啟用 MVC 架構
+// 測試用 回傳縮排給客戶端
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.WriteIndented = true;
+    });
+// 測試用
 
 var app = builder.Build();
 

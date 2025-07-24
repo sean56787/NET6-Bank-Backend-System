@@ -1,9 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace DotNetSandbox.Models
+namespace DotNetSandbox.Models.Data
 {
-    
+
 
     public class User
     {
@@ -13,8 +14,9 @@ namespace DotNetSandbox.Models
             admin,
         }
 
-        public int Id { get; set; }
-        public int UserId { get; set; }
+        [Key]
+        public int Id { get; set; } //暫時當userId
+        // public int UserId { get; set; }
         public string Username { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public UserRole Role { get; set; } = UserRole.user;
@@ -24,5 +26,7 @@ namespace DotNetSandbox.Models
         public decimal Balance { get; set; }
         public bool IsVerified { get; set; } = false;
         public bool IsActive { get; set; } = false;
+
+        public List<BalanceLog> BalanceLogs { get; set; }
     }
 }
