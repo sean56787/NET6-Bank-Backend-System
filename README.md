@@ -10,7 +10,7 @@
 # Features
 | Features |
 |------|
-| MVC 架構專案 |
+| MVC 架構 |
 | 路由 + RESTful_API |
 | JWT 身分驗證 |
 | DTO 自訂輸入輸出 |
