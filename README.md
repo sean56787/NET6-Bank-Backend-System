@@ -3,9 +3,9 @@
 - [Features](#features)
 - [QuickStart](#quickstart)
 - [API-Test](#api-test)
-  - [API for User](#api-for-user)
-  - [API for Admin](#api-for-admin)
-  - [API for Transactions](#api-for-transactions)
+  - [API for User](#api-for-user-普通用戶層)
+  - [API for Admin](#api-for-admin-管理員權限)
+  - [API for Transactions](#api-for-transactions-餘額異動)
 
 # Features
 | Features |
