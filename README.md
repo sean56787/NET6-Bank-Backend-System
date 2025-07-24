@@ -26,8 +26,8 @@ dotnet run
 #### server run on https://localhost:5295
 
 ---
-# API Test
-## API for User 普通用戶層
+# API 測試範例
+# API for User 普通用戶層
 #### 1-1. 用戶註冊
 ```bash
 curl -k -X POST "https://localhost:5295/api/user/register" -H "Content-Type: application/json" -d '{"username":"tester001", "password":"123456", "email":"tester001@gmail.com"}'
@@ -45,7 +45,7 @@ curl -k -X POST "https://localhost:5295/api/user/login" -H "Content-Type: applic
 curl -s -i -k -X GET https://localhost:5295/api/user/who-am-i -H "authorization: Bearer <token>"
 ```
 ---
-## API for Admin 管理員權限
+# API for Admin 管理員權限
 #### 2-1. 管理員登入，預設已驗證身分，可直接登入
 ```bash
 curl -k -X POST "https://localhost:5295/api/user/login" -H "Content-Type: application/json" -d '{"username":"admin", "password":"admin-password"}'
@@ -79,7 +79,7 @@ curl -i -s -k -X POST "https://localhost:5295/api/admin/frozen-user" -H "Content
 curl -i -s -k -X POST "https://localhost:5295/api/admin/delete-user" -H "Content-Type: application/json" -d '{"username":"tester001"}' -H "authorization: Bearer <token>"
 ```
 ---
-## API for Transactions 餘額異動
+# API for Transactions 餘額異動
 #### 3-1. 餘額異動 (請在 \<token\> 處放入 JWT token)
 ```bash
 curl -i -s -k -X POST "https://localhost:5295/api/balance/adjust" -H "Content-Type: application/json" -d '{"username":"admin", "Amount":"999", "balanceType":"ManualAdjust", "note":"test"}' -H "authorization: Bearer <token>"
