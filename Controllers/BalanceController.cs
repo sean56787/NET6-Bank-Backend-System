@@ -81,6 +81,7 @@ namespace DotNetSandbox.Controllers
             }
         }
 
+        /*
         [Authorize]
         [HttpGet("solo-user-transactions")]
         public async Task<IActionResult> GetSoloTransactions([FromQuery] SoloTransactionRequest req)
@@ -97,5 +98,6 @@ namespace DotNetSandbox.Controllers
 
             var result = _balanceService.GetSoloTransactions(req, User.Identity?.Name ?? "system");
         }
+        */
     }
 }

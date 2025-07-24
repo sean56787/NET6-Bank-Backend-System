@@ -102,6 +102,7 @@ namespace DotNetSandbox.Services
             return ServiceResponse<UserTransactionDTO>.Ok(data: result);
         }
         
+        /*
         public async Task<ServiceResponse<SoloTransactionRequest>> GetSoloTransactions(SoloTransactionRequest req)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == req.UserId);
@@ -112,5 +113,6 @@ namespace DotNetSandbox.Services
             var query = _context.BalanceLogs
 
         }
+        */
     }
 }
