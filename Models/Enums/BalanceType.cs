@@ -2,10 +2,13 @@
 {
     public enum BalanceType
     {
-        ManualAdjust,
-        SystemAdd,
+        Default,
+        AdjustBySystem,
         Refund,
-        Purchase,
-        Withdrawal
+        Withdraw,
+        Deposit,
+        Transfer,
+        TransferIn,
+        TransferOut,
     }
 }

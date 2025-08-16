@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.EntityFrameworkCore;
 using System.Text;
 using DotNetSandbox.Data;
 using DotNetSandbox.Services;
 using DotNetSandbox.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
-using DotNetSandbox.Models.Data;
+using DotNetSandbox.Services.Utility;
 
 var builder = WebApplication.CreateBuilder(args); // 初始化ASP.NET Core App
 
@@ -13,10 +13,13 @@ var jwtConfig = builder.Configuration.GetSection("Jwt");
 var key = Encoding.ASCII.GetBytes(jwtConfig["Key"]);
 
 builder.Services.AddDbContext<AppDbContext>(options => { options.UseSqlite("Data source=user.db"); }); // 有人需要AppDbContext時自動注入
-builder.Services.AddScoped<AuthService>(); // TODO: 改自動注入
-builder.Services.AddScoped<AdminService>(); // TODO: 改自動注入
-builder.Services.AddScoped<UserService>(); // TODO: 改自動注入
-builder.Services.AddScoped<IBalanceService, BalanceService>(); // DI
+builder.Services.AddScoped<IAuthService, AuthService>();                // DI
+builder.Services.AddScoped<IUserService, UserService>();                // DI
+builder.Services.AddScoped<IAdminService, AdminService>();              // DI
+builder.Services.AddScoped<IBalanceService, BalanceService>();          // DI
+builder.Services.AddScoped<IUserWithdrawCheck, UserWithdrawCheck>();    // DI
+builder.Services.AddScoped<IUserDepositCheck, UserDepositCheck>();      // DI
+builder.Services.AddScoped<IUserTransferCheck, UserTransferCheck>();    // DI
 builder.Services.AddAuthentication(options =>
 {
     // 告訴 ASP.NET Core 使用 Bearer Token 驗證用戶JWT

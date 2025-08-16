@@ -15,7 +15,7 @@ namespace DotNetSandbox.Models.DTOs.Output
     {
         public int Id { get; set; }
         public decimal Amount { get; set; }
-        public BalanceType Type { get; set; }
+        public BalanceType Type { get; set; } = BalanceType.Default;
         public string? Description { get; set; }
         public string? @Operator { get; set; }
         public DateTime CreatedAt { get; set; }

@@ -4,10 +4,13 @@ using System.Text.Json.Serialization;
 
 namespace DotNetSandbox.Models.DTOs.Input
 {
-    public class AdjustBalanceRequest
+    public class TransferRequest
     {
-        [Required(ErrorMessage = "Required Username")]
-        public string Username { get; set; }
+        [Required(ErrorMessage = "Required FromUserName")]
+        public int FromUserId { get; set; }
+
+        [Required(ErrorMessage = "Required ToUserName")]
+        public int ToUserId { get; set; }
 
         [Required(ErrorMessage = "Required Amount")]
         public decimal Amount { get; set; }

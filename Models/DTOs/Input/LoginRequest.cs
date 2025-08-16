@@ -5,8 +5,8 @@ namespace DotNetSandbox.Models.DTOs.Input
     public class LoginRequest : IValidatableObject
     {
 
-        [StringLength(20, MinimumLength = 3, ErrorMessage = "username should be 3~20 chars")]
-        public string? Username { get; set; }
+        [Range(1, 999, ErrorMessage = "userid should be 1~999")]
+        public int? UserId { get; set; }
 
         [Required(ErrorMessage = "pwd is required")]
         [MinLength(6, ErrorMessage = "pwd should be at least 6 chars")]
@@ -17,11 +17,11 @@ namespace DotNetSandbox.Models.DTOs.Input
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-            if (string.IsNullOrWhiteSpace(Username) && string.IsNullOrWhiteSpace(Email))
+            if (!UserId.HasValue && string.IsNullOrWhiteSpace(Email))
             {
                 yield return new ValidationResult(
                     "username or email must be provided",
-                    new[] { nameof(Username), nameof(Email) }
+                    new[] { nameof(UserId), nameof(Email) }
                 );
             }
         }

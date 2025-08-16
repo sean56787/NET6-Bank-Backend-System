@@ -14,10 +14,11 @@ namespace DotNetSandbox.Data
 
                 context.Users.Add(new User
                 {
-                    Id = 1,
+                    UserId = 1,
                     Username = "admin",
                     Password = hashedPassword,
                     IsVerified = true,
+                    IsActive = true,
                     Role = User.UserRole.admin,
                     Email = "admin@gmail.com"
                 });

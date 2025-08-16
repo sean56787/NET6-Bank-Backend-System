@@ -6,9 +6,9 @@ namespace DotNetSandbox.Models.DTOs.Input
 {
     public class UpdateUserRequest
     {
-        [Required(ErrorMessage = "username is required")]
-        [StringLength(20, MinimumLength = 3, ErrorMessage = "username should be 3~20 chars")]
-        public string? Username { get; set; }
+        [Required(ErrorMessage = "UserId is required")]
+        [Range(1, 999, ErrorMessage = "UserId should be 1~999")]
+        public int? UserId { get; set; }
 
         [MinLength(6, ErrorMessage = "pwd should be at least 6 chars")]
         public string? Password { get; set; }
@@ -25,11 +25,11 @@ namespace DotNetSandbox.Models.DTOs.Input
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-            if (string.IsNullOrWhiteSpace(Username) && string.IsNullOrWhiteSpace(Email))
+            if (!UserId.HasValue && string.IsNullOrWhiteSpace(Email))
             {
                 yield return new ValidationResult(
                     "username or email must be provided",
-                    new[] { nameof(Username), nameof(Email) }
+                    new[] { nameof(UserId), nameof(Email) }
                 );
             }
         }

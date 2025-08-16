@@ -15,8 +15,7 @@ namespace DotNetSandbox.Models.Data
         }
 
         [Key]
-        public int Id { get; set; } //暫時當userId
-        // public int UserId { get; set; }
+        public int UserId { get; set; }
         public string Username { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public UserRole Role { get; set; } = UserRole.user;
@@ -27,6 +26,8 @@ namespace DotNetSandbox.Models.Data
         public bool IsVerified { get; set; } = false;
         public bool IsActive { get; set; } = false;
 
-        public List<BalanceLog> BalanceLogs { get; set; }
+        //navigate
+        public List<BalanceLog> BalanceLogs { get; set; } = new ();
+        public List<TransferLog> TransferLog { get; set; } = new();
     }
 }

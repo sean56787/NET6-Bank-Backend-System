@@ -1,15 +1,14 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Security.Claims;
-using System.Text;
-using DotNetSandbox.Data;
+﻿using DotNetSandbox.Data;
 using DotNetSandbox.Models.DTOs.Output;
 using DotNetSandbox.Services.CustomResponse;
 using DotNetSandbox.Models.Data;
+using Microsoft.EntityFrameworkCore;
+using DotNetSandbox.Models.DTOs.Input;
+using DotNetSandbox.Services.Interfaces;
 
 namespace DotNetSandbox.Services
 {
-    public class UserService
+    public class UserService : IUserService
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _config;
@@ -20,46 +19,50 @@ namespace DotNetSandbox.Services
             _config = config;
         }
 
-        public bool Register(string? username, string? password, string? email)
+        public async Task<ServiceResponse<UserDTO>> Register(RegisterRequest req)
         {
-            bool result = _context.Users.Any(u => u.Username == username) || _context.Users.Any(u => u.Email == email); //只負責找
-            if (result)
-                return false;
 
-            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
+            bool result = await _context.Users.AnyAsync(u => u.Username == req.Username || u.Email == req.Email);
+            if (result)
+                return ServiceResponse<UserDTO>.Error(message: "username or email already exists", statusCode: 409);
+
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(req.Password);
 
             var newUser = new User
             {
-                Username = username,
+                Username = req.Username,
                 Password = hashedPassword,
-                Email = email,
+                Email = req.Email,
                 IsVerified = false,
             };
 
-            _context.Users.Add(newUser);
-            _context.SaveChanges();
-            return true;
+            await _context.Users.AddAsync(newUser);
+            await _context.SaveChangesAsync();
+            return ServiceResponse<UserDTO>.Ok(message: "user register success");
+            
+
         }
 
-        public ServiceResponse<UserDTO> Login(string? username, string? password, string? email)
+        public async Task<ServiceResponse<UserDTO>> Login(LoginRequest req)
         {
             User? user = null;
 
-            if (!string.IsNullOrWhiteSpace(username))
-                user = _context.Users.FirstOrDefault(u => u.Username == username);
-            else if (!string.IsNullOrWhiteSpace(email))
-                user = _context.Users.FirstOrDefault(u => u.Email == email);
+            if (req.UserId.HasValue)
+                user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.UserId);
+            else if (!string.IsNullOrWhiteSpace(req.Email))
+                user = await _context.Users.FirstOrDefaultAsync(u => u.Email == req.Email);
 
             if (user == null)
             {
-                return ServiceResponse<UserDTO>.NotFound(message: "user not found");
+                return ServiceResponse<UserDTO>.NotFound(message: "user not found", statusCode: 404);
             }
-            else if(user.IsVerified == false || user.IsActive == false){
-                return ServiceResponse<UserDTO>.Error(message: "user not verified or has been frozen", statusCode:401);
-            }
-            else if (!BCrypt.Net.BCrypt.Verify(password, user.Password))
+            else if (user.IsVerified == false || user.IsActive == false)
             {
-                return ServiceResponse<UserDTO>.Error(message: "account & password doesn't match", statusCode:401);
+                return ServiceResponse<UserDTO>.Error(message: "user not verified or has been frozen", statusCode: 401);
+            }
+            else if (!BCrypt.Net.BCrypt.Verify(req.Password, user.Password))
+            {
+                return ServiceResponse<UserDTO>.Error(message: "account & password doesn't match", statusCode: 401);
             }
 
             var userDTO = new UserDTO
@@ -70,17 +73,22 @@ namespace DotNetSandbox.Services
                 IsActive = user.IsActive
             };
 
-            return ServiceResponse<UserDTO>.Ok(data:userDTO, message: "login success");
+            return ServiceResponse<UserDTO>.Ok(data: userDTO, message: "login success");
+            
+            
         }
 
-        public bool Verify(string username)
+        public async Task<ServiceResponse<UserDTO>> Verify(string email)
         {
-            var user = _context.Users.FirstOrDefault(u => u.Username == username);
-            if (user == null) return false;
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+                return ServiceResponse<UserDTO>.NotFound(message: "user not found");
             user.IsVerified = true;
             user.IsActive = true;
-            _context.SaveChanges(); // 寫入
-            return true;
+            await _context.SaveChangesAsync(); // 寫入
+            return ServiceResponse<UserDTO>.Ok(message: "user verify success, pls login");
+
         }
     }
 }

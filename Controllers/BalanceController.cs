@@ -18,6 +18,69 @@ namespace DotNetSandbox.Controllers
         }
 
         [Authorize]
+        [HttpPost("transfer")]
+        public async Task<IActionResult> Transfer([FromBody] TransferRequest req)
+        {
+            try
+            {
+                if (User?.Identity?.IsAuthenticated != true)
+                {
+                    return Unauthorized();
+                }
+
+                var result = await _balanceService.TransferAsync(req, User.Identity?.Name ?? "system");
+
+                return StatusCode(result.StatusCode, result.Message);
+            } catch(Exception e)
+            {
+                return StatusCode(500, e.Message);
+            }
+        }
+
+        [Authorize]
+        [HttpPost("withdraw")]
+        public async Task<IActionResult> Withdraw([FromBody] WithdrawRequest req)
+        {
+            try
+            {
+                if (User?.Identity?.IsAuthenticated != true)
+                {
+                    return Unauthorized();
+                }
+
+                var result = await _balanceService.WithdrawAsync(req, User.Identity?.Name ?? "system");
+
+                return StatusCode(result.StatusCode, result.Message);
+
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, e.Message);
+            }
+        }
+
+        [Authorize]
+        [HttpPost("deposit")]
+        public async Task<IActionResult> Deposit([FromBody] DepositRequest req)
+        {
+            try
+            {
+                if(User?.Identity?.IsAuthenticated != true)
+                {
+                    return Unauthorized();
+                }
+
+                var result = await _balanceService.DepositAsync(req, User.Identity?.Name ?? "system");
+
+                return StatusCode(result.StatusCode, result.Message);
+
+            } catch (Exception e)
+            {
+                return StatusCode(500, e.Message);
+            }
+        }
+
+        [Authorize]
         [HttpPost("adjust")]
         public async Task<IActionResult> AdjustBalance([FromBody] AdjustBalanceRequest req)
         {
@@ -32,8 +95,7 @@ namespace DotNetSandbox.Controllers
 
                 if(userRole != "admin")
                 {
-                    Console.WriteLine(userRole);
-                    return StatusCode(403, new { error = "you have no permissions to user this api" });
+                    return StatusCode(403, new { error = "you have no permissions to use this api" });
                 }
 
                 var result = await _balanceService.AdjustBalanceAsync(req, User.Identity?.Name ?? "system");
@@ -68,11 +130,11 @@ namespace DotNetSandbox.Controllers
 
                 if (result.Success)
                 {
-                    return StatusCode(result.StatusCode, new { msg = result.Data });
+                    return StatusCode(result.StatusCode, new { message = result.Data });
                 }
                 else
                 {
-                    return StatusCode(result.StatusCode, new { msg = result.Message });
+                    return StatusCode(result.StatusCode, new { message = result.Message });
                 }
 
             } catch (Exception e)
@@ -94,7 +156,7 @@ namespace DotNetSandbox.Controllers
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
 
             if (userRole != "admin")
-                return StatusCode(403, new { msg = "you're not admin" });
+                return StatusCode(403, new { message = "you're not admin" });
 
             var result = _balanceService.GetSoloTransactions(req, User.Identity?.Name ?? "system");
         }

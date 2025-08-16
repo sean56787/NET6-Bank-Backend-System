@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DotNetSandbox.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250718105535_Init")]
-    partial class Init
+    [Migration("20250813124543_patch-1")]
+    partial class patch1
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -21,7 +21,48 @@ namespace DotNetSandbox.Migrations
 
             modelBuilder.Entity("DotNetSandbox.Models.Data.BalanceLog", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("BalanceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("BalanceBefore")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Operator")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("TransactionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("BalanceId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("BalanceLogs");
+                });
+
+            modelBuilder.Entity("DotNetSandbox.Models.Data.TransferLog", b =>
+                {
+                    b.Property<int>("TransferId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
@@ -35,26 +76,35 @@ namespace DotNetSandbox.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Operator")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Type")
+                    b.Property<int?>("FromBalanceLogId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("UserId")
+                    b.Property<int>("FromUserId")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("Id");
+                    b.Property<int?>("ToBalanceLogId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ToUserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("TransferId");
+
+                    b.HasIndex("FromBalanceLogId");
+
+                    b.HasIndex("ToBalanceLogId");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("BalanceLogs");
+                    b.ToTable("TransferLogs");
                 });
 
             modelBuilder.Entity("DotNetSandbox.Models.Data.User", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("UserId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
@@ -83,7 +133,7 @@ namespace DotNetSandbox.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.HasKey("Id");
+                    b.HasKey("UserId");
 
                     b.ToTable("Users");
                 });
@@ -99,9 +149,30 @@ namespace DotNetSandbox.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("DotNetSandbox.Models.Data.TransferLog", b =>
+                {
+                    b.HasOne("DotNetSandbox.Models.Data.BalanceLog", "FromBalanceLog")
+                        .WithMany()
+                        .HasForeignKey("FromBalanceLogId");
+
+                    b.HasOne("DotNetSandbox.Models.Data.BalanceLog", "ToBalanceLog")
+                        .WithMany()
+                        .HasForeignKey("ToBalanceLogId");
+
+                    b.HasOne("DotNetSandbox.Models.Data.User", null)
+                        .WithMany("TransferLog")
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("FromBalanceLog");
+
+                    b.Navigation("ToBalanceLog");
+                });
+
             modelBuilder.Entity("DotNetSandbox.Models.Data.User", b =>
                 {
                     b.Navigation("BalanceLogs");
+
+                    b.Navigation("TransferLog");
                 });
 #pragma warning restore 612, 618
         }

@@ -8,19 +8,19 @@ namespace DotNetSandbox.Models.DTOs.Input
     {
         [Required(ErrorMessage = "username is required")]
         [StringLength(20, MinimumLength = 3, ErrorMessage = "username should be 3~20 chars")]
-        public string? Username { get; set; }
+        public string Username { get; set; }
 
         [Required(ErrorMessage = "pwd is required")]
         [MinLength(6, ErrorMessage = "pwd should be at least 6 chars")]
-        public string? Password { get; set; }
+        public string Password { get; set; }
 
         [Required(ErrorMessage = "email is required")]
         [RegularExpression(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "invalid email format")]
-        public string? Email { get; set; }
+        public string Email { get; set; }
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
         [Required(ErrorMessage = "role is required")]
-        public User.UserRole? Role { get; set; }
+        public User.UserRole Role { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {

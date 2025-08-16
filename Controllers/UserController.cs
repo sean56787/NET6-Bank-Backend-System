@@ -1,8 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;     // ControllerBase
 using Microsoft.AspNetCore.Authorization;
 using DotNetSandbox.Services;       // register / login / verify
+using DotNetSandbox.Services.CustomResponse;
 using System.Security.Claims;
 using DotNetSandbox.Models.DTOs.Input;
+using DotNetSandbox.Models.DTOs.Output;
+using Microsoft.AspNetCore.Http;
+using DotNetSandbox.Services.Interfaces;
 
 namespace DotNetSandbox.Controllers
 {
@@ -11,74 +15,88 @@ namespace DotNetSandbox.Controllers
     public class UserController : ControllerBase
     {
         
-        private readonly UserService _userService;
-        private readonly AuthService _authService;
-        public UserController(UserService userService, AuthService authService)
+        private readonly IUserService _userService;
+        private readonly IAuthService _authService;
+        public UserController(IUserService userService, IAuthService authService)
         {
             _userService = userService;
             _authService = authService;
         }
 
         [HttpPost("register")]
-        public IActionResult Register([FromBody] RegisterRequest req)
+        public async Task<IActionResult> Register([FromBody] RegisterRequest req)
         {
             try
             {
-                var success = _userService.Register(req.Username, req.Password, req.Email);
-                if (!success) return Conflict(new { error = "user || email already exists" });
-                return Ok(new { msg = "user registered" });
+                var result = await _userService.Register(req);
+
+                if (!result.Success) 
+                    return StatusCode(statusCode:result.StatusCode, result.Message);
+
+                return Ok(new { message = result.Message });
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, new { message = $"server error: {e.Message}"});
             }
         }
 
         [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginRequest req)
+        public async Task<IActionResult> Login([FromBody] LoginRequest req)
         {
             try
             {
-                var result = _userService.Login(req.Username, req.Password, req.Email);       //檢查是否為已驗證帳戶
+                var result = await _userService.Login(req);       //檢查是否為已驗證帳戶
 
-                if (!result.Success)
+                if (result == null)
+                {
+                    return StatusCode(500, new { message = "server error: server no response" });
+                }
+                else if (!result.Success)
                 {
                     return StatusCode(result.StatusCode, result.Message);
                 }
 
                 if (result?.Data != null)
                 {
-                    var token = _authService.GenerateToken(result.Data);
-                    return Ok(new { token });
+                    var tokenResult = _authService.GenerateToken(result.Data);
+                    return Ok(new { message = tokenResult.Message, token = tokenResult.Data });
                 }
                 else
                 {
                     return StatusCode(500, new {message = "server error: can not generate Json web token"});
                 }
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, new { message = $"server error: {e.Message}" });
             }
         }
 
         [HttpPost("verify")]
-        public IActionResult Verify(string username)
+        public async Task<IActionResult> Verify([FromQuery] string email)
         {
             try
             {
-                var success = _userService.Verify(username);
-                if (!success) return Conflict(new { error = "user not found" });
-                return Ok(new { msg = "user verified, pls login" });
-            } catch (Exception ex)
+                var result = await _userService.Verify(email);
+                if (result == null)
+                {
+                    return StatusCode(500, new { message = "server error: server no response" });
+                }
+                else if (!result.Success)
+                {
+                    return StatusCode(result.StatusCode, result.Message);
+                }
+                return Ok(new { message = result.Message });
+            } catch (Exception e)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, new { message = $"server error: {e.Message}" });
             }
         }
 
         [Authorize]
         [HttpGet("who-am-i")]
-        public IActionResult WhoAmI()
+        public async Task<IActionResult> WhoAmI()
         {
             try
             {
@@ -96,7 +114,7 @@ namespace DotNetSandbox.Controllers
                 
                 return Ok(new
                 {
-                    msg = $"Hello, {username}",
+                    message = $"Hello, {username}",
                     data = new 
                     {
                         Role = role,
@@ -104,9 +122,9 @@ namespace DotNetSandbox.Controllers
                     }
                 });
                 
-            } catch (Exception ex)
+            } catch (Exception e)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, new { message = $"server error: {e.Message}" });
             }
         }
     }

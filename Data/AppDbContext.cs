@@ -7,6 +7,7 @@ namespace DotNetSandbox.Data
     {
         public DbSet<User> Users { get; set; }
         public DbSet<BalanceLog> BalanceLogs { get; set; }
+        public DbSet<TransferLog> TransferLogs { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
@@ -19,12 +20,13 @@ namespace DotNetSandbox.Data
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<User>().Property(u => u.Role).HasConversion<string>(); // 後續所有_context.add() 在遇到 User.Role都會用字串儲存
+            modelBuilder.Entity<BalanceLog>().Property(b => b.Type).HasConversion<string>();
 
             modelBuilder.Entity<BalanceLog>()
                 .HasOne(b => b.User)
                 .WithMany(u => u.BalanceLogs)
                 .HasForeignKey(b => b.UserId) //外鍵
-                .HasPrincipalKey(u => u.Id)
+                .HasPrincipalKey(u => u.UserId)
                 .OnDelete(DeleteBehavior.Cascade); //父表不存在時連同刪除子表
             
             
