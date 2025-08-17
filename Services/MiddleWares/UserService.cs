@@ -6,13 +6,13 @@ using Microsoft.EntityFrameworkCore;
 using DotNetSandbox.Models.DTOs.Input;
 using DotNetSandbox.Services.Interfaces;
 
-namespace DotNetSandbox.Services
+namespace DotNetSandbox.Services.MiddleWares
 {
     public class UserService : IUserService
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _config;
-        
+
         public UserService(AppDbContext context, IConfiguration config)
         {
             _context = context;
@@ -34,13 +34,12 @@ namespace DotNetSandbox.Services
                 Password = hashedPassword,
                 Email = req.Email,
                 IsVerified = false,
+                IsActive = true,
             };
 
             await _context.Users.AddAsync(newUser);
             await _context.SaveChangesAsync();
             return ServiceResponse<UserDTO>.Ok(message: "user register success");
-            
-
         }
 
         public async Task<ServiceResponse<UserDTO>> Login(LoginRequest req)
@@ -74,21 +73,20 @@ namespace DotNetSandbox.Services
             };
 
             return ServiceResponse<UserDTO>.Ok(data: userDTO, message: "login success");
-            
-            
         }
 
         public async Task<ServiceResponse<UserDTO>> Verify(string email)
         {
-
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
             if (user == null)
                 return ServiceResponse<UserDTO>.NotFound(message: "user not found");
+            if (user.IsActive == false)
+                return ServiceResponse<UserDTO>.Error(message: "user account has been frozen");
+
             user.IsVerified = true;
             user.IsActive = true;
             await _context.SaveChangesAsync(); // 寫入
             return ServiceResponse<UserDTO>.Ok(message: "user verify success, pls login");
-
         }
     }
 }

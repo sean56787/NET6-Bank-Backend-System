@@ -7,7 +7,7 @@ using DotNetSandbox.Models.DTOs.Output;
 using DotNetSandbox.Services.CustomResponse;
 using DotNetSandbox.Services.Interfaces;
 
-namespace DotNetSandbox.Services
+namespace DotNetSandbox.Services.MiddleWares
 {
     public class AuthService : IAuthService
     {
@@ -22,7 +22,6 @@ namespace DotNetSandbox.Services
 
         public ServiceResponse<string> GenerateToken(UserDTO user)
         {
-
             var key = Encoding.ASCII.GetBytes(_config["Jwt:Key"]);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -37,14 +36,11 @@ namespace DotNetSandbox.Services
                 Expires = DateTime.Now.AddHours(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
-
             var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenString = tokenHandler.WriteToken(token);
 
-            return ServiceResponse<string>.Ok(data:tokenString, message: "token generate success");
-
-            
+            return ServiceResponse<string>.Ok(data: tokenString, message: "token generate success");
         }
     }
 }

@@ -1,11 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;     // ControllerBase
 using Microsoft.AspNetCore.Authorization;
-using DotNetSandbox.Services;       // register / login / verify
-using DotNetSandbox.Services.CustomResponse;
 using System.Security.Claims;
 using DotNetSandbox.Models.DTOs.Input;
-using DotNetSandbox.Models.DTOs.Output;
-using Microsoft.AspNetCore.Http;
 using DotNetSandbox.Services.Interfaces;
 
 namespace DotNetSandbox.Controllers
@@ -14,7 +10,6 @@ namespace DotNetSandbox.Controllers
     [Route("api/[controller]")]     // api/user
     public class UserController : ControllerBase
     {
-        
         private readonly IUserService _userService;
         private readonly IAuthService _authService;
         public UserController(IUserService userService, IAuthService authService)

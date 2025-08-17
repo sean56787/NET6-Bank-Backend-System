@@ -14,7 +14,6 @@ namespace DotNetSandbox.Data
 
         }
 
-        
         protected override void OnModelCreating(ModelBuilder modelBuilder) //modelBuilder => Entity Framework Core 自定義資料模型設定
         {
             base.OnModelCreating(modelBuilder);
@@ -28,22 +27,6 @@ namespace DotNetSandbox.Data
                 .HasForeignKey(b => b.UserId) //外鍵
                 .HasPrincipalKey(u => u.UserId)
                 .OnDelete(DeleteBehavior.Cascade); //父表不存在時連同刪除子表
-            
-            
-            
-            
-            /*
-            modelBuilder.Entity<User>().HasData(new          //Migration階段就會執行，要用匿名物件不讓Role變成int
-            {
-                Id = 1,
-                Username = "admin",
-                Password = "admin-password",
-                Isverified = true,
-                Role = User.UserRole.admin.ToString(),
-                Email = "admin@gmail.com"
-            });
-            */
         }
-        
     }
 }

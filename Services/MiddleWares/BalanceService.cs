@@ -7,7 +7,7 @@ using DotNetSandbox.Services.CustomResponse;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 
-namespace DotNetSandbox.Services
+namespace DotNetSandbox.Services.MiddleWares
 {
     public class BalanceService : IBalanceService
     {
@@ -24,7 +24,7 @@ namespace DotNetSandbox.Services
             _transferCheck = transferCheck;
         }
 
-        public async Task<ServiceResponse<UserBalanceDTO>> TransferAsync(TransferRequest req, string operatorName)
+        public async Task<ServiceResponse<UserBalanceDTO>> TransferAsync(TransferRequest req, string? operatorName)
         {
             var sender = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.FromUserId);
             var receiver = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.ToUserId);
@@ -63,7 +63,7 @@ namespace DotNetSandbox.Services
                     Balance = senderBalanceAfter,
                     Type = Models.Enums.BalanceType.TransferOut,
                     Description = req.Description ?? "",
-                    Operator = sender.Username,
+                    Operator = operatorName ?? sender.Username,
                     CreatedAt = DateTime.Now,
                     TransactionId = transferLog.TransferId,
                 };
@@ -79,7 +79,7 @@ namespace DotNetSandbox.Services
                     Balance = receiverBalanceAfter,
                     Type = Models.Enums.BalanceType.TransferIn,
                     Description = req.Description ?? "",
-                    Operator = sender.Username,
+                    Operator = operatorName ?? sender.Username,
                     CreatedAt = DateTime.Now,
                     TransactionId = transferLog.TransferId,
                 };
@@ -104,7 +104,7 @@ namespace DotNetSandbox.Services
             }
         }
 
-        public async Task<ServiceResponse<UserBalanceDTO>> WithdrawAsync(WithdrawRequest req, string operatorName)
+        public async Task<ServiceResponse<UserBalanceDTO>> WithdrawAsync(WithdrawRequest req, string? operatorName)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.UserId);
 
@@ -141,7 +141,7 @@ namespace DotNetSandbox.Services
                     Type = Models.Enums.BalanceType.Withdraw,
                     Description = req.Description ?? "",
                     CreatedAt = DateTime.Now,
-                    Operator = operatorName,
+                    Operator = operatorName ?? user.Username,
                 });
                 await _context.SaveChangesAsync();
 
@@ -155,6 +155,7 @@ namespace DotNetSandbox.Services
                     BalanceBeforeOperation = BalanceBefore,
                     Balance = user.Balance,
                 };
+
                 return ServiceResponse<UserBalanceDTO>.Ok(result, message: "withdraw successful");
             }
             catch (Exception e)
@@ -164,9 +165,9 @@ namespace DotNetSandbox.Services
             }
         }
 
-        public async Task<ServiceResponse<UserBalanceDTO>> DepositAsync(DepositRequest req, string operatorName)
+        public async Task<ServiceResponse<UserBalanceDTO>> DepositAsync(DepositRequest req, string? operatorName)
         {
-            
+
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.UserId);
 
             if (user == null)
@@ -201,7 +202,7 @@ namespace DotNetSandbox.Services
                     Type = Models.Enums.BalanceType.Deposit,
                     Description = req.Description ?? "",
                     CreatedAt = DateTime.Now,
-                    Operator = operatorName,
+                    Operator = operatorName ?? user.Username,
                 });
                 await _context.SaveChangesAsync();              //確認提交
 
@@ -215,6 +216,7 @@ namespace DotNetSandbox.Services
                     BalanceBeforeOperation = BalanceBefore,
                     Balance = user.Balance,
                 };
+
                 return ServiceResponse<UserBalanceDTO>.Ok(result, message: "deposit successful");
             }
             catch (Exception e)
@@ -222,12 +224,11 @@ namespace DotNetSandbox.Services
                 await transaction.RollbackAsync();              //取消交易
                 throw;
             }
-
         }
 
-        public async Task<ServiceResponse<UserBalanceDTO>> AdjustBalanceAsync(AdjustBalanceRequest req, string operatorName)
+        public async Task<ServiceResponse<UserBalanceDTO>> AdjustBalanceAsync(AdjustBalanceRequest req, string? operatorName)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == req.Username);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.UserId);
 
             if (user == null)
             {
@@ -242,14 +243,16 @@ namespace DotNetSandbox.Services
                 user.Balance += req.Amount;
                 await _context.SaveChangesAsync();
 
-                _context.BalanceLogs.Add(new Models.Data.BalanceLog
+                _context.BalanceLogs.Add(new BalanceLog
                 {
                     UserId = user.UserId,
                     Amount = req.Amount,
+                    BalanceBefore = BalanceBefore,
+                    Balance = user.Balance,
                     Type = req.Type,
                     Description = req.Description ?? "",
                     CreatedAt = DateTime.Now,
-                    Operator = operatorName
+                    Operator = operatorName ?? user.Username
                 });
                 await _context.SaveChangesAsync();
 
@@ -270,10 +273,9 @@ namespace DotNetSandbox.Services
                 await transaction.RollbackAsync();              //取消交易
                 throw;
             }
-
         }
 
-        public async Task<ServiceResponse<UserTransactionDTO>> GetTransactions(TransactionsRequest req, string operatorName)
+        public async Task<ServiceResponse<UserTransactionDTO>> GetTransactions(TransactionsRequest req, string? operatorName)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.UserId);
 
@@ -315,9 +317,9 @@ namespace DotNetSandbox.Services
                 TotalCount = totalCount,
                 Transactions = logs.Select(b => new TransactionDTO
                 {
-                    Id = b.BalanceId,
+                    BalanceId = b.BalanceId,
                     Amount = b.Amount,
-                    Type = b.Type,
+                    Type = b.Type.ToString(),
                     Description = b.Description,
                     Operator = b.Operator,
                     CreatedAt = b.CreatedAt
@@ -326,7 +328,7 @@ namespace DotNetSandbox.Services
 
             return ServiceResponse<UserTransactionDTO>.Ok(data: result);
         }
-        
+
         /*
         public async Task<ServiceResponse<SoloTransactionRequest>> GetSoloTransactions(SoloTransactionRequest req)
         {

@@ -3,9 +3,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 using DotNetSandbox.Data;
-using DotNetSandbox.Services;
 using DotNetSandbox.Services.Interfaces;
 using DotNetSandbox.Services.Utility;
+using DotNetSandbox.Services.MiddleWares;
 
 var builder = WebApplication.CreateBuilder(args); // 初始化ASP.NET Core App
 
@@ -47,16 +47,14 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
     });
 });
 
-// Add services to the container.
-
 builder.Services.AddControllers(); // 啟用 MVC 架構
-// 測試用 回傳縮排給客戶端
+
+// 回傳縮排格式給客戶端
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.WriteIndented = true;
     });
-// 測試用
 
 var app = builder.Build();
 
@@ -66,13 +64,8 @@ using (var scope = app.Services.CreateScope())
     DotNetSandbox.Data.SeedData.Initialize(context);
 }
 
-// Configure the HTTP request pipeline.
-
 app.UseHttpsRedirection(); // 強制將 HTTP 轉為 HTTPS
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers(); // 讓[ApiController] 的 Controller 路由生效
-
 app.Run();

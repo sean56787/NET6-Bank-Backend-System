@@ -1,5 +1,4 @@
-﻿using DotNetSandbox.Models.DTOs;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace DotNetSandbox.Services.CustomResponse
 {
@@ -8,7 +7,6 @@ namespace DotNetSandbox.Services.CustomResponse
         public bool Success { get; set; }
         public int StatusCode { get; set; }
         public string? Message { get; set; }
-
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public T? Data { get; set; }
 

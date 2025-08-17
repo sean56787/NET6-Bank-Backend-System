@@ -6,7 +6,7 @@ using DotNetSandbox.Models.Data;
 using Microsoft.EntityFrameworkCore;
 using DotNetSandbox.Services.Interfaces;
 
-namespace DotNetSandbox.Services
+namespace DotNetSandbox.Services.MiddleWares
 {
     public class AdminService : IAdminService
     {
@@ -28,8 +28,8 @@ namespace DotNetSandbox.Services
                 return ServiceResponse<UserDTO>.NotFound("user not found");
             }
 
-            if (req.UserId.HasValue)
-                user.UserId = (int)req.UserId;
+            if (!string.IsNullOrWhiteSpace(req.Username))
+                user.Username = req.Username;
 
             if (!string.IsNullOrWhiteSpace(req.Email))
                 user.Email = req.Email;
@@ -59,14 +59,14 @@ namespace DotNetSandbox.Services
                 Email = user.Email
             };
 
-            return ServiceResponse<UserDTO>.Ok(data:updatedUserDTO);
+            return ServiceResponse<UserDTO>.Ok(data: updatedUserDTO);
         }
 
-        public async Task<ServiceResponse<UserDTO>> CreateUser(CreateUserRequest req) 
+        public async Task<ServiceResponse<UserDTO>> CreateUser(CreateUserRequest req)
         {
             var result = await _context.Users.AnyAsync(u => u.Username == req.Username || u.Email == req.Email);
             if (result)
-                return ServiceResponse<UserDTO>.Error(message:"error: user/email exist", statusCode: 409);
+                return ServiceResponse<UserDTO>.Error(message: "error: user/email exist", statusCode: 409);
 
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(req.Password);
 
@@ -76,7 +76,7 @@ namespace DotNetSandbox.Services
                 Password = hashedPassword,
                 Email = req.Email,
                 IsVerified = false,
-                IsActive = false,
+                IsActive = true,
                 Role = req.Role,
             };
 
@@ -90,37 +90,32 @@ namespace DotNetSandbox.Services
                 Role = newUser.Role.ToString(),
                 Email = newUser.Email
             };
-            
-            if(userDTO != null)
+
+            if (userDTO != null)
             {
-                return ServiceResponse<UserDTO>.Ok(message: "user created success", data:userDTO);
+                return ServiceResponse<UserDTO>.Ok(message: "user created success", data: userDTO);
             }
             else
             {
                 return ServiceResponse<UserDTO>.Error(message: "process fail when create userDTO", statusCode: 500);
             }
-            
         }
 
         public async Task<ServiceResponse<UserDTO>> DeleteUser(DeleteUserRequest req)
         {
-
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.UserId);
-                
             if (user == null)
             {
-                return ServiceResponse<UserDTO>.NotFound(message:"user not found");
+                return ServiceResponse<UserDTO>.NotFound(message: "user not found");
             }
-            
+
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
             return ServiceResponse<UserDTO>.Ok(message: "user deleted"); ;
-            
         }
 
         public async Task<ServiceResponse<UserDTO>> GetUser(GetUserRequest req)
         {
-
             var userDTO = await _context.Users.
                 Where(u => u.UserId == req.UserId || u.Email == req.Email).
                 Select(u => new UserDTO
@@ -135,13 +130,10 @@ namespace DotNetSandbox.Services
                 return ServiceResponse<UserDTO>.NotFound(message: $"user not found");
 
             return ServiceResponse<UserDTO>.Ok(data: userDTO);
-
-            
         }
 
         public async Task<ServiceResponse<List<UserDTO>>> GetAllUsers()
         {
-
             var usersDTO = await _context.Users.Select(u => new UserDTO
             {
                 Id = u.UserId,
@@ -155,12 +147,10 @@ namespace DotNetSandbox.Services
                 return ServiceResponse<List<UserDTO>>.Ok(data: usersDTO);
             else
                 return ServiceResponse<List<UserDTO>>.Error(message: "users not found");
-
         }
 
         public async Task<ServiceResponse<UserDTO>> FrozenUser(FrozenUserRequest req)
         {
-
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.UserId);
             UserDTO? userDTO = null;
 
@@ -185,9 +175,8 @@ namespace DotNetSandbox.Services
                 Role = user.Role.ToString(),
                 IsActive = user.IsActive
             };
+
             return ServiceResponse<UserDTO>.Ok(userDTO, message: "frozen user success");
-            
-            
         }
     }
 }

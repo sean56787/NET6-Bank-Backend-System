@@ -20,6 +20,7 @@ namespace DotNetSandbox.Services.Utility
         public async Task<ServiceResponse<UserBalanceDTO>> IsValidOperation(WithdrawRequest req)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.UserId);
+
             if (req.Amount <= 0)
             {
                 return ServiceResponse<UserBalanceDTO>.Error(message: "amount of Withdraw can not be negative", statusCode: 403);

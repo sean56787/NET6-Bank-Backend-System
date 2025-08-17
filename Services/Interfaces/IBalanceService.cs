@@ -1,7 +1,6 @@
 ﻿using DotNetSandbox.Models.DTOs.Input;
 using DotNetSandbox.Models.DTOs.Output;
 using DotNetSandbox.Services.CustomResponse;
-using Microsoft.AspNetCore.Mvc;
 
 namespace DotNetSandbox.Services.Interfaces
 {

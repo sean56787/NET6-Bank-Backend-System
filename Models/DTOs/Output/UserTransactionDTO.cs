@@ -13,11 +13,11 @@ namespace DotNetSandbox.Models.DTOs.Output
     }
     public class TransactionDTO
     {
-        public int Id { get; set; }
+        public int BalanceId { get; set; }
         public decimal Amount { get; set; }
-        public BalanceType Type { get; set; } = BalanceType.Default;
-        public string? Description { get; set; }
-        public string? @Operator { get; set; }
+        public string? Type { get; set; } = string.Empty;
+        public string? Description { get; set; } = string.Empty;
+        public string? @Operator { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
     }
 }

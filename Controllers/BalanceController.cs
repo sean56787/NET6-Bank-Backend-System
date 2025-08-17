@@ -28,10 +28,11 @@ namespace DotNetSandbox.Controllers
                     return Unauthorized();
                 }
 
-                var result = await _balanceService.TransferAsync(req, User.Identity?.Name ?? "system");
+                var result = await _balanceService.TransferAsync(req, User.Identity?.Name);
 
                 return StatusCode(result.StatusCode, result.Message);
-            } catch(Exception e)
+            } 
+            catch(Exception e)
             {
                 return StatusCode(500, e.Message);
             }
@@ -48,10 +49,9 @@ namespace DotNetSandbox.Controllers
                     return Unauthorized();
                 }
 
-                var result = await _balanceService.WithdrawAsync(req, User.Identity?.Name ?? "system");
+                var result = await _balanceService.WithdrawAsync(req, User.Identity?.Name);
 
                 return StatusCode(result.StatusCode, result.Message);
-
             }
             catch (Exception e)
             {
@@ -70,11 +70,11 @@ namespace DotNetSandbox.Controllers
                     return Unauthorized();
                 }
 
-                var result = await _balanceService.DepositAsync(req, User.Identity?.Name ?? "system");
+                var result = await _balanceService.DepositAsync(req, User.Identity?.Name);
 
                 return StatusCode(result.StatusCode, result.Message);
-
-            } catch (Exception e)
+            } 
+            catch (Exception e)
             {
                 return StatusCode(500, e.Message);
             }
@@ -98,10 +98,11 @@ namespace DotNetSandbox.Controllers
                     return StatusCode(403, new { error = "you have no permissions to use this api" });
                 }
 
-                var result = await _balanceService.AdjustBalanceAsync(req, User.Identity?.Name ?? "system");
+                var result = await _balanceService.AdjustBalanceAsync(req, User.Identity?.Name);
 
                 return StatusCode(result.StatusCode, result.Message);
-            } catch(Exception e)
+            } 
+            catch(Exception e)
             {
                 return StatusCode(500, e.Message);
             }
@@ -126,18 +127,16 @@ namespace DotNetSandbox.Controllers
                     return StatusCode(403, new { error = "you have no permission to use this api" });
                 }
 
-                var result = await _balanceService.GetTransactions(req, User.Identity?.Name ?? "system");
+                var result = await _balanceService.GetTransactions(req, User.Identity?.Name);
 
-                if (result.Success)
+                if (!result.Success)
                 {
-                    return StatusCode(result.StatusCode, new { message = result.Data });
+                    return StatusCode(result.StatusCode, new { error = result.Message });
                 }
-                else
-                {
-                    return StatusCode(result.StatusCode, new { message = result.Message });
-                }
-
-            } catch (Exception e)
+                
+                return Ok(new { message = result.Data });
+            } 
+            catch (Exception e)
             {
                 return StatusCode(500, e.Message);
             }

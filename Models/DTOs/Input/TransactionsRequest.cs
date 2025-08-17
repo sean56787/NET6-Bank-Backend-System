@@ -10,7 +10,7 @@ namespace DotNetSandbox.Models.DTOs.Input
         public int UserId { get; set; }
         public string? @Operator { get; set; }
 
-        [Required(ErrorMessage = "Required BalanceType")]
+        //[Required(ErrorMessage = "Required BalanceType")]
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public BalanceType? BalanceType { get; set; }
         public DateTime? StartDate { get; set; }

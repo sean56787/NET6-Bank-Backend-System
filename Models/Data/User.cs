@@ -4,8 +4,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DotNetSandbox.Models.Data
 {
-
-
     public class User
     {
         public enum UserRole
@@ -22,9 +20,9 @@ namespace DotNetSandbox.Models.Data
         public string Email { get; set; } = string.Empty;
 
         [Column(TypeName = "decimal(18,2)")]
-        public decimal Balance { get; set; }
+        public decimal Balance { get; set; } = decimal.Zero;
         public bool IsVerified { get; set; } = false;
-        public bool IsActive { get; set; } = false;
+        public bool IsActive { get; set; } = true;
 
         //navigate
         public List<BalanceLog> BalanceLogs { get; set; } = new ();

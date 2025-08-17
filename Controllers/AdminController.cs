@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using DotNetSandbox.Services;
 using System.Security.Claims;
 using DotNetSandbox.Models.DTOs.Input;
 using DotNetSandbox.Services.Interfaces;
@@ -108,8 +107,8 @@ namespace DotNetSandbox.Controllers
                 }
                 
                 return Ok(new { message = result.Message });
-
-            } catch (Exception e)
+            } 
+            catch (Exception e)
             {
                 return StatusCode(500, e.Message);
             }
@@ -169,9 +168,9 @@ namespace DotNetSandbox.Controllers
 
                 return Ok(new { message = result.Data });
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, e.Message);
             }
         }
 
@@ -202,9 +201,9 @@ namespace DotNetSandbox.Controllers
 
                 return Ok(new {message = result.Message});
 
-            } catch (Exception exp)
+            } catch (Exception e)
             {
-                return StatusCode(500, exp.Message);
+                return StatusCode(500, e.Message);
             }
         }
     }

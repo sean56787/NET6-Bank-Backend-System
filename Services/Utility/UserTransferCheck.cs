@@ -4,7 +4,6 @@ using DotNetSandbox.Models.DTOs.Input;
 using DotNetSandbox.Models.DTOs.Output;
 using DotNetSandbox.Services.CustomResponse;
 using DotNetSandbox.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace DotNetSandbox.Services.Utility
 {
