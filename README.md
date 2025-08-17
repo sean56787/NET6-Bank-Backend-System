@@ -1,6 +1,7 @@
 # .Net 6 銀行後端系統
 ### 用戶註冊及登入 / 用戶存提款、轉帳及交易紀錄查詢 / Admin管理員權限
 - [Features](#features)
+- [Tools & Versions](#tools--versions)
 - [QuickStart](#quickstart)
 - API
   - [API - 普通用戶](#api-for-普通用戶)
@@ -10,22 +11,35 @@
 # Features
 | Features |
 |------|
-| MVC 架構 |
-| 路由 、 RESTful_API |
-| JWT 身分驗證 |
-| EF Core + SQLite |
+| `MVC 架構` |
+| `路由 、 RESTful_API` |
+| `JWT 身分驗證` |
+| `EF Core + SQLite` |
 
+# Tools & Versions
+| 名稱 | 版本 |
+|------|------|
+| C# | `10.0` |
+| .Net6 | `6.0.428` |
+| BCrypt | `4.0.3` |
+| JwtBearer | `6.0.25` |
+| EFcore SQLite | `6.0.25` |
 
 # QuickStart
 ### Development
-
 ```bash
 dotnet run
 ```
 #### server run on https://localhost:5295
-
 ---
-# APIs
+
+# API
+# 用戶 | 管理員
+| 身分 | features |
+|------|------|
+| 用戶 | `註冊帳戶`、`驗證帳戶`、`登入帳戶`、`存款`、`提款`、`轉帳` |
+| 管理員 | `增刪查改用戶資料`、`查詢交易明細`、`凍結或刪除用戶` |
+---
 ## API for 普通用戶
 #### 1-1. 用戶註冊帳號
 ```bash
