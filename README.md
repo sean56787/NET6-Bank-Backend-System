@@ -26,11 +26,11 @@
 | EFcore SQLite | `6.0.25` |
 
 # QuickStart
-### Development
+### 在專案根目錄下執行
 ```bash
 dotnet run
 ```
-#### server run on https://localhost:5295
+#### 伺服器應運行於 https://localhost:5295
 ---
 
 # API
