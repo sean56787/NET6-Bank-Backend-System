@@ -1,5 +1,5 @@
 # .Net 6 銀行後端系統
-### 用戶註冊及登入 / 用戶存提款、轉帳及交易紀錄查詢 / Admin管理員權限
+### 用戶註冊及登入 / 用戶存提款、轉帳及交易紀錄查詢 / 管理員權限功能
 - [Features](#features)
 - [Tools & Versions](#tools--versions)
 - [QuickStart](#quickstart)
