@@ -56,6 +56,26 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.WriteIndented = true;
     });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy
+            .AllowAnyOrigin()   // 允許所有來源
+            .AllowAnyMethod()   // 允許 GET, POST, PUT, DELETE 等方法
+            .AllowAnyHeader();  // 允許所有 Header
+    });
+
+    // 也可以設定特定來源
+    options.AddPolicy("AllowSpecific", policy =>
+    {
+        policy
+            .WithOrigins("https://example.com", "https://another.com")
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -63,7 +83,7 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     DotNetSandbox.Data.SeedData.Initialize(context);
 }
-
+app.UseCors("AllowAll");
 app.UseHttpsRedirection(); // 強制將 HTTP 轉為 HTTPS
 app.UseAuthentication();
 app.UseAuthorization();

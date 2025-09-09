@@ -33,7 +33,7 @@ namespace DotNetSandbox.Services.MiddleWares
             if (!IsValidTransfer.StatusCode.Equals(200))
                 return IsValidTransfer;
 
-            using var transaction = await _context.Database.BeginTransactionAsync(); // 建立交易控制
+            using var transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable); // 建立交易控制
             try
             {
                 decimal senderBalanceBefore = sender.Balance;
@@ -90,8 +90,12 @@ namespace DotNetSandbox.Services.MiddleWares
                 transferLog.ToBalanceLogId = toBalanceLog.BalanceId;
                 await _context.SaveChangesAsync();
 
-                sender.Balance -= req.Amount;
-                receiver.Balance += req.Amount;
+                await _context.Database.ExecuteSqlRawAsync(
+                        $"UPDATE [Users] SET Balance = {sender.Balance - req.Amount} WHERE UserId = {sender.UserId}"
+                    );
+                await _context.Database.ExecuteSqlRawAsync(
+                        $"UPDATE [Users] SET Balance = {receiver.Balance + req.Amount} WHERE UserId = {receiver.UserId}"
+                    );
                 await _context.SaveChangesAsync();
 
                 await transaction.CommitAsync();                //成功
@@ -125,11 +129,16 @@ namespace DotNetSandbox.Services.MiddleWares
                 return IsValidWithdraw;
             }
 
-            using var transaction = _context.Database.BeginTransaction();
+            using var transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable); // 序列化 > 阻擋其他交易的寫入 > 一致性
 
             try
             {
-                user.Balance -= req.Amount;
+                decimal UserUpdatedBalance =  user.Balance - req.Amount;
+
+                await _context.Database
+                    .ExecuteSqlRawAsync(
+                         $"UPDATE Users SET Balance = {UserUpdatedBalance} WHERE UserId = {user.UserId}"
+                    );
                 await _context.SaveChangesAsync();
 
                 _context.BalanceLogs.Add(new BalanceLog
@@ -186,11 +195,15 @@ namespace DotNetSandbox.Services.MiddleWares
                 return IsValidDeposit;
             }
 
-            using var transaction = _context.Database.BeginTransaction();
+            using var transaction = _context.Database.BeginTransaction(System.Data.IsolationLevel.Serializable);
 
             try
             {
-                user.Balance += req.Amount;
+                decimal UserUpdatedBalance = user.Balance + req.Amount;
+                await _context.Database
+                    .ExecuteSqlRawAsync(
+                        $"UPDATE Users SET Balance = {UserUpdatedBalance} WHERE UserId = {user.UserId}"
+                    );
                 await _context.SaveChangesAsync();
 
                 _context.BalanceLogs.Add(new BalanceLog
