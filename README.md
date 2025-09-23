@@ -15,6 +15,7 @@
 | `路由 、 RESTful_API` |
 | `JWT 身分驗證` |
 | `EF Core + SQLite` |
+| `ACID 交易安全控制` |
 
 # Tools & Versions
 | 名稱 | 版本 |
