@@ -41,10 +41,10 @@ builder.Services.AddAuthentication(options =>
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
     serverOptions.ListenAnyIP(3000); // http port 3000
-    serverOptions.ListenAnyIP(5295, listenOptions => // secure http port 5295
-    {
-        listenOptions.UseHttps();
-    });
+    // serverOptions.ListenAnyIP(5295, listenOptions => // secure http port 5295
+    // {
+    //     listenOptions.UseHttps();
+    // });
 });
 
 builder.Services.AddControllers(); // 啟用 MVC 架構
@@ -66,14 +66,15 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader();  // 允許所有 Header
     });
 
-    // 也可以設定特定來源
-    options.AddPolicy("AllowSpecific", policy =>
-    {
-        policy
-            .WithOrigins("https://example.com", "https://another.com")
-            .AllowAnyMethod()
-            .AllowAnyHeader();
-    });
+    /* 也可以設定特定來源
+        options.AddPolicy("AllowSpecific", policy =>
+        {
+            policy
+                .WithOrigins("https://example.com", "https://another.com")
+                .AllowAnyMethod()
+                .AllowAnyHeader();
+        });
+    */
 });
 
 var app = builder.Build();
@@ -84,7 +85,7 @@ using (var scope = app.Services.CreateScope())
     DotNetSandbox.Data.SeedData.Initialize(context);
 }
 app.UseCors("AllowAll");
-app.UseHttpsRedirection(); // 強制將 HTTP 轉為 HTTPS
+// app.UseHttpsRedirection(); // 強制將 HTTP 轉為 HTTPS
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers(); // 讓[ApiController] 的 Controller 路由生效
