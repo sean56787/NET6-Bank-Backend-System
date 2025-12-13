@@ -7,7 +7,7 @@ using DotNetSandbox.Models.DTOs.Output;
 using DotNetSandbox.Services.CustomResponse;
 using DotNetSandbox.Services.Interfaces;
 
-namespace DotNetSandbox.Services.MiddleWares
+namespace DotNetSandbox.Services
 {
     public class AuthService : IAuthService
     {

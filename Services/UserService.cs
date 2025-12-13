@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using DotNetSandbox.Models.DTOs.Input;
 using DotNetSandbox.Services.Interfaces;
 
-namespace DotNetSandbox.Services.MiddleWares
+namespace DotNetSandbox.Services
 {
     public class UserService : IUserService
     {

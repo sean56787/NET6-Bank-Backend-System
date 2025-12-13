@@ -5,6 +5,7 @@ using System.Text;
 using DotNetSandbox.Data;
 using DotNetSandbox.Services.Interfaces;
 using DotNetSandbox.Services.Utility;
+using DotNetSandbox.Services;
 using DotNetSandbox.Services.MiddleWares;
 
 var builder = WebApplication.CreateBuilder(args); // 初始化ASP.NET Core App
@@ -13,13 +14,15 @@ var jwtConfig = builder.Configuration.GetSection("Jwt");
 var key = Encoding.ASCII.GetBytes(jwtConfig["Key"]);
 
 builder.Services.AddDbContext<AppDbContext>(options => { options.UseSqlite("Data source=user.db"); }); // 有人需要AppDbContext時自動注入
-builder.Services.AddScoped<IAuthService, AuthService>();                // DI
-builder.Services.AddScoped<IUserService, UserService>();                // DI
-builder.Services.AddScoped<IAdminService, AdminService>();              // DI
-builder.Services.AddScoped<IBalanceService, BalanceService>();          // DI
-builder.Services.AddScoped<IUserWithdrawCheck, UserWithdrawCheck>();    // DI
-builder.Services.AddScoped<IUserDepositCheck, UserDepositCheck>();      // DI
-builder.Services.AddScoped<IUserTransferCheck, UserTransferCheck>();    // DI
+builder.Services.AddScoped<IAuthService, AuthService>();                // SCOPED
+builder.Services.AddScoped<IUserService, UserService>();                // SCOPED
+builder.Services.AddScoped<IAdminService, AdminService>();              // SCOPED
+builder.Services.AddScoped<IBalanceService, BalanceService>();          // SCOPED
+builder.Services.AddScoped<IUserWithdrawCheck, UserWithdrawCheck>();    // SCOPED
+builder.Services.AddScoped<IUserDepositCheck, UserDepositCheck>();      // SCOPED
+builder.Services.AddScoped<IUserTransferCheck, UserTransferCheck>();    // SCOPED
+builder.Services.AddScoped<IErrorLoggingService, ErrorLoggingService>();// SCOPED
+builder.Services.AddTransient<ExceptionHandlingMW>();                      // Transient
 
 builder.Services.AddAuthentication(options =>
 {
@@ -80,14 +83,17 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+app.UseMiddleware<ExceptionHandlingMW>(); // 中介層-錯誤捕捉
+
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     DotNetSandbox.Data.SeedData.Initialize(context);
 }
+
 app.UseCors("AllowAll");
 // app.UseHttpsRedirection(); // 強制將 HTTP 轉為 HTTPS
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseAuthentication(); //jwt驗證
+app.UseAuthorization(); //jwt授權
 app.MapControllers(); // 讓[ApiController] 的 Controller 路由生效
 app.Run();

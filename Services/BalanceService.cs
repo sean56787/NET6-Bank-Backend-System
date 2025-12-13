@@ -7,7 +7,7 @@ using DotNetSandbox.Services.CustomResponse;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 
-namespace DotNetSandbox.Services.MiddleWares
+namespace DotNetSandbox.Services
 {
     public class BalanceService : IBalanceService
     {
@@ -133,7 +133,7 @@ namespace DotNetSandbox.Services.MiddleWares
 
             try
             {
-                decimal UserUpdatedBalance =  user.Balance - req.Amount;
+                decimal UserUpdatedBalance = user.Balance - req.Amount;
 
                 await _context.Database
                     .ExecuteSqlRawAsync(

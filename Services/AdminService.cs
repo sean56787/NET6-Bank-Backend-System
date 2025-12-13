@@ -6,7 +6,7 @@ using DotNetSandbox.Models.Data;
 using Microsoft.EntityFrameworkCore;
 using DotNetSandbox.Services.Interfaces;
 
-namespace DotNetSandbox.Services.MiddleWares
+namespace DotNetSandbox.Services
 {
     public class AdminService : IAdminService
     {
