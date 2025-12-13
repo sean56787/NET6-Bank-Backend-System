@@ -18,6 +18,7 @@ namespace DotNetSandbox.Controllers
             _authService = authService;
         }
 
+        [Authorize(Roles = "admin, user")]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest req)
         {
@@ -36,6 +37,7 @@ namespace DotNetSandbox.Controllers
             }
         }
 
+        [Authorize(Roles = "admin, user")]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest req)
         {
@@ -68,6 +70,7 @@ namespace DotNetSandbox.Controllers
             }
         }
 
+        [Authorize(Roles = "admin, user")]
         [HttpPost("verify")]
         public async Task<IActionResult> Verify([FromQuery] string email)
         {
@@ -89,17 +92,12 @@ namespace DotNetSandbox.Controllers
             }
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin, user")]
         [HttpGet("who-am-i")]
         public async Task<IActionResult> WhoAmI()
         {
             try
             {
-                if (User?.Identity?.IsAuthenticated != true) // JWT 是否驗證通過
-                {
-                    return Unauthorized();
-                }
-
                 var username = User.Identity.Name;
                 var role = User.FindFirst(ClaimTypes.Role)?.Value;
                 var email = User.FindFirst(ClaimTypes.Email)?.Value;

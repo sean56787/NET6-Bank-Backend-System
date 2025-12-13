@@ -20,6 +20,7 @@ builder.Services.AddScoped<IBalanceService, BalanceService>();          // DI
 builder.Services.AddScoped<IUserWithdrawCheck, UserWithdrawCheck>();    // DI
 builder.Services.AddScoped<IUserDepositCheck, UserDepositCheck>();      // DI
 builder.Services.AddScoped<IUserTransferCheck, UserTransferCheck>();    // DI
+
 builder.Services.AddAuthentication(options =>
 {
     // 告訴 ASP.NET Core 使用 Bearer Token 驗證用戶JWT

@@ -27,10 +27,10 @@ namespace DotNetSandbox.Services.MiddleWares
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, user.Role.ToString()),
-                new Claim(ClaimTypes.Email, user.Email)
-            }),
+                    new Claim(ClaimTypes.Name, user.Username),
+                    new Claim(ClaimTypes.Role, user.Role.ToString()),
+                    new Claim(ClaimTypes.Email, user.Email)
+                }),
                 Issuer = _config["Jwt:Issuer"],
                 Audience = _config["Jwt:Audience"],
                 Expires = DateTime.Now.AddHours(1),

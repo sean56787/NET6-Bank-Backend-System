@@ -17,24 +17,12 @@ namespace DotNetSandbox.Controllers
             _adminService = adminService;
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin")]
         [HttpPut("update-user")]
         public async Task<IActionResult> UpdateUser([FromBody] UpdateUserRequest req)
         {
             try
             {
-                if (User?.Identity?.IsAuthenticated != true) // JWT 是否驗證通過
-                {
-                    return Unauthorized();
-                }
-
-                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-
-                if (userRole != "admin")
-                {
-                    return StatusCode(403, new { error = "you have to permission to use this api" });
-                }
-
                 var result = await _adminService.UpdateUser(req);
 
                 if (!result.Success)
@@ -50,24 +38,12 @@ namespace DotNetSandbox.Controllers
             }
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin")]
         [HttpPost("create-user")]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest req)
         {
             try
             {
-                if (User?.Identity?.IsAuthenticated != true) // JWT 是否驗證通過
-                {
-                    return Unauthorized();
-                }
-
-                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-
-                if (userRole != "admin")
-                {
-                    return StatusCode(403, new { error = "you have to permission to use this api" });
-                }
-
                 var result = await _adminService.CreateUser(req);
                 if (!result.Success)
                 {
@@ -81,24 +57,12 @@ namespace DotNetSandbox.Controllers
             }
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin")]
         [HttpDelete("delete-user")]
         public async Task<IActionResult> DeleteUser([FromBody] DeleteUserRequest req)
         {
             try
             {
-                if (User?.Identity?.IsAuthenticated != true) // JWT 是否驗證通過
-                {
-                    return Unauthorized();
-                }
-
-                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-
-                if (userRole != "admin")
-                {
-                    return StatusCode(403, new { error = "you have no permission to use this api" });
-                }
-
                 var result = await _adminService.DeleteUser(req);
 
                 if(!result.Success)
@@ -114,24 +78,12 @@ namespace DotNetSandbox.Controllers
             }
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin")]
         [HttpGet("get-user")]
         public async Task<IActionResult> GetUser([FromQuery] GetUserRequest req)
         {
             try
             {
-                if (User?.Identity?.IsAuthenticated != true) // JWT 是否驗證通過
-                {
-                    return Unauthorized();
-                }
-
-                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-
-                if (userRole != "admin")
-                {
-                    return StatusCode(403, new { error = "you have no permission to use this api" });
-                }
-
                 var result = await _adminService.GetUser(req);
                 if (!result.Success)
                     return StatusCode(statusCode:result.StatusCode, new { message = result.Message });
@@ -144,24 +96,12 @@ namespace DotNetSandbox.Controllers
             }
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin")]
         [HttpGet("get-all-users")]
         public async Task<IActionResult> GetAllUsers()
         {
             try
             {
-                if (User?.Identity?.IsAuthenticated != true) // JWT 是否驗證通過
-                {
-                    return Unauthorized();
-                }
-
-                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-                
-                if (userRole != "admin")
-                {
-                    return StatusCode(403, new { error = "you have no permission to use this api" });
-                }
-
                 var result = await _adminService.GetAllUsers();
                 if (!result.Success)
                     return StatusCode(statusCode: result.StatusCode, new { message = result.Message });
@@ -174,24 +114,12 @@ namespace DotNetSandbox.Controllers
             }
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin")]
         [HttpPost("frozen-user")]
         public async Task<IActionResult> FrozenUser([FromBody] FrozenUserRequest req)
         {
             try
             {
-                if(User?.Identity?.IsAuthenticated != true)
-                {
-                    return Unauthorized();
-                }
-
-                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-
-                if(userRole != "admin")
-                {
-                    return StatusCode(403, new { error = "you have no permission to use this api" });
-                }
-
                 var result = await _adminService.FrozenUser(req);
 
                 if (!result.Success)

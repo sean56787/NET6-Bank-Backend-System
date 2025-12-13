@@ -17,17 +17,12 @@ namespace DotNetSandbox.Controllers
             _balanceService = balanceService;
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin, user")]
         [HttpPost("transfer")]
         public async Task<IActionResult> Transfer([FromBody] TransferRequest req)
         {
             try
             {
-                if (User?.Identity?.IsAuthenticated != true)
-                {
-                    return Unauthorized();
-                }
-
                 var result = await _balanceService.TransferAsync(req, User.Identity?.Name);
 
                 return StatusCode(result.StatusCode, result.Message);
@@ -38,17 +33,12 @@ namespace DotNetSandbox.Controllers
             }
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin, user")]
         [HttpPost("withdraw")]
         public async Task<IActionResult> Withdraw([FromBody] WithdrawRequest req)
         {
             try
             {
-                if (User?.Identity?.IsAuthenticated != true)
-                {
-                    return Unauthorized();
-                }
-
                 var result = await _balanceService.WithdrawAsync(req, User.Identity?.Name);
 
                 return StatusCode(result.StatusCode, result.Message);
@@ -59,17 +49,12 @@ namespace DotNetSandbox.Controllers
             }
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin, user")]
         [HttpPost("deposit")]
         public async Task<IActionResult> Deposit([FromBody] DepositRequest req)
         {
             try
             {
-                if(User?.Identity?.IsAuthenticated != true)
-                {
-                    return Unauthorized();
-                }
-
                 var result = await _balanceService.DepositAsync(req, User.Identity?.Name);
 
                 return StatusCode(result.StatusCode, result.Message);
@@ -80,24 +65,12 @@ namespace DotNetSandbox.Controllers
             }
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin")]
         [HttpPost("adjust")]
         public async Task<IActionResult> AdjustBalance([FromBody] AdjustBalanceRequest req)
         {
             try
             {
-                if(User?.Identity?.IsAuthenticated != true)
-                {
-                    return Unauthorized();
-                }
-
-                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-
-                if(userRole != "admin")
-                {
-                    return StatusCode(403, new { error = "you have no permissions to use this api" });
-                }
-
                 var result = await _balanceService.AdjustBalanceAsync(req, User.Identity?.Name);
 
                 return StatusCode(result.StatusCode, result.Message);
@@ -109,24 +82,12 @@ namespace DotNetSandbox.Controllers
             
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin")]
         [HttpPost("user-transactions")]
         public async Task<IActionResult> GetTransactions([FromBody] TransactionsRequest req)
         {
             try
             {
-                if(User?.Identity?.IsAuthenticated != true)
-                {
-                    return Unauthorized();
-                }
-
-                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-
-                if(userRole != "admin")
-                {
-                    return StatusCode(403, new { error = "you have no permission to use this api" });
-                }
-
                 var result = await _balanceService.GetTransactions(req, User.Identity?.Name);
 
                 if (!result.Success)
@@ -143,20 +104,10 @@ namespace DotNetSandbox.Controllers
         }
 
         /*
-        [Authorize]
+        [Authorize(Roles = "admin")]
         [HttpGet("solo-user-transactions")]
         public async Task<IActionResult> GetSoloTransactions([FromQuery] SoloTransactionRequest req)
         {
-            if (User?.Identity?.IsAuthenticated != true)
-            {
-                return Unauthorized();
-            }
-
-            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-
-            if (userRole != "admin")
-                return StatusCode(403, new { message = "you're not admin" });
-
             var result = _balanceService.GetSoloTransactions(req, User.Identity?.Name ?? "system");
         }
         */
