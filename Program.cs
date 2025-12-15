@@ -95,5 +95,5 @@ app.UseCors("AllowAll");
 // app.UseHttpsRedirection(); // 強制將 HTTP 轉為 HTTPS
 app.UseAuthentication(); //jwt驗證
 app.UseAuthorization(); //jwt授權
-app.MapControllers(); // 讓[ApiController] 的 Controller 路由生效
+app.MapControllers(); // 讓[ApiController] 的 Controller 路由生效 -> 取代UseRouting(導航至API)、UseEndpoints(啟用API)
 app.Run();

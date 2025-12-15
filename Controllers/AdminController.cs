@@ -21,118 +21,75 @@ namespace DotNetSandbox.Controllers
         [HttpPut("update-user")]
         public async Task<IActionResult> UpdateUser([FromBody] UpdateUserRequest req)
         {
-            try
-            {
-                var result = await _adminService.UpdateUser(req);
+            var result = await _adminService.UpdateUser(req);
 
-                if (!result.Success)
-                {
-                    return StatusCode(statusCode: result.StatusCode, new { message = $"server error: {result.Message}" });
-                }
+            if (!result.Success)
+                return StatusCode(result.StatusCode, new { error = result.Message });
                     
-                return Ok(new { message = result.Message, info = result.Data });
-            }
-            catch (Exception e)
-            {
-                return StatusCode(500, e.Message);
-            }
+            return Ok(new { message = result.Message, data = result.Data });
         }
 
         [Authorize(Roles = "admin")]
         [HttpPost("create-user")]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest req)
         {
-            try
-            {
-                var result = await _adminService.CreateUser(req);
-                if (!result.Success)
-                {
-                    return StatusCode(result.StatusCode, result.Message);
-                }
-                return Ok(new { message = result.Message, data = result.Data});
-            }
-            catch (Exception e)
-            {
-                return StatusCode(500, e.Message);
-            }
+            var result = await _adminService.CreateUser(req);
+            if (!result.Success)
+                return StatusCode(result.StatusCode, new { error = result.Message });
+
+            return Ok(new { message = result.Message, data = result.Data });
         }
 
         [Authorize(Roles = "admin")]
         [HttpDelete("delete-user")]
         public async Task<IActionResult> DeleteUser([FromBody] DeleteUserRequest req)
         {
-            try
-            {
-                var result = await _adminService.DeleteUser(req);
+            var result = await _adminService.DeleteUser(req);
 
-                if(!result.Success)
-                {
-                    return StatusCode(result.StatusCode, new { error = result.Message });
-                }
-                
-                return Ok(new { message = result.Message });
-            } 
-            catch (Exception e)
-            {
-                return StatusCode(500, e.Message);
-            }
+            if (!result.Success)
+                return StatusCode(result.StatusCode, new { error = result.Message });
+
+            return Ok(new { message = result.Message });
         }
 
         [Authorize(Roles = "admin")]
         [HttpGet("get-user")]
         public async Task<IActionResult> GetUser([FromQuery] GetUserRequest req)
         {
-            try
-            {
-                var result = await _adminService.GetUser(req);
-                if (!result.Success)
-                    return StatusCode(statusCode:result.StatusCode, new { message = result.Message });
+            var result = await _adminService.GetUser(req);
+            if (!result.Success)
+                return StatusCode(result.StatusCode, new { error = result.Message });
 
-                return Ok(new { message = result.Data });
-            }
-            catch (Exception e)
-            {
-                return StatusCode(500, e.Message);
-            }
+            return Ok(new { data = result.Data });
         }
 
         [Authorize(Roles = "admin")]
         [HttpGet("get-all-users")]
         public async Task<IActionResult> GetAllUsers()
         {
-            try
-            {
-                var result = await _adminService.GetAllUsers();
-                if (!result.Success)
-                    return StatusCode(statusCode: result.StatusCode, new { message = result.Message });
+            var result = await _adminService.GetAllUsers();
+            if (!result.Success)
+                return StatusCode(result.StatusCode, new { error = result.Message });
 
-                return Ok(new { message = result.Data });
-            }
-            catch (Exception e)
-            {
-                return StatusCode(500, e.Message);
-            }
+            return Ok(new { data = result.Data });
         }
 
         [Authorize(Roles = "admin")]
         [HttpPost("frozen-user")]
         public async Task<IActionResult> FrozenUser([FromBody] FrozenUserRequest req)
         {
-            try
-            {
-                var result = await _adminService.FrozenUser(req);
+            var result = await _adminService.FrozenUser(req);
 
-                if (!result.Success)
-                {
-                    return StatusCode(result.StatusCode, new { error = result.Message });
-                }
+            if (!result.Success)
+                return StatusCode(result.StatusCode, new { error = result.Message });
 
-                return Ok(new {message = result.Message});
+            return Ok(new { message = result.Message });
+        }
 
-            } catch (Exception e)
-            {
-                return StatusCode(500, e.Message);
-            }
+        [HttpGet("test-exp")]
+        public async Task<IActionResult> TestExp()
+        {
+            throw new NullReferenceException();
         }
     }
 }

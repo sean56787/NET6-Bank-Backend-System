@@ -15,19 +15,25 @@ namespace DotNetSandbox.Services
         {
             _context = context;
         }
-        public async Task<ServiceResponse<string>> LogErrorAsync(Exception ex)
+        public async Task<ServiceResponse<ErrorLog>> LogErrorAsync(Exception ex)
         {
-            var errorLog = new ErrorLog
+            try
             {
-                Message = ex.Message,
-                Timestamp = DateTime.UtcNow,
-                SecurityLevel = Models.Enums.SecurityLevelType.DEBUG
+                var errorLog = new ErrorLog
+                {
+                    Message = ex.Message,
+                    Timestamp = DateTime.UtcNow,
+                    SecurityLevel = Models.Enums.SecurityLevelType.DEBUG
+                };
+                await _context.ErrorLogs.AddAsync(errorLog);
+                await _context.SaveChangesAsync();
 
-            };
-            await _context.ErrorLogs.AddAsync(errorLog);
-            await _context.SaveChangesAsync();
-
-            return ServiceResponse<string>.Ok(message: "infos or exceptions have been Loged");
+                return ServiceResponse<ErrorLog>.Ok(data: errorLog, message: "infos or exceptions have been loged", statusCode:201);
+            }
+            catch(Exception e)
+            {
+                return ServiceResponse<ErrorLog>.Error(message: $"LogError service unavailable: {e.Message}", statusCode: 503);
+            }
         }
     }
 }

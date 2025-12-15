@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.Text.Json.Serialization;
 
 namespace DotNetSandbox.Services.CustomResponse
 {
@@ -14,26 +15,39 @@ namespace DotNetSandbox.Services.CustomResponse
             new()
             {
                 Success = true,
-                StatusCode = statusCode,
+                Data = data,
                 Message = message,
-                Data = data
+                StatusCode = statusCode,
             };
 
         public static ServiceResponse<T> NotFound(string message = "not found", int statusCode = 404) =>
             new()
             {
                 Success = false,
+                Message = message,
                 StatusCode = statusCode,
-                Message = message
             };
 
         public static ServiceResponse<T> Error(T? data = default, string message = "error", int statusCode = 500) =>
             new()
             {
                 Success = false,
-                StatusCode = statusCode,
+                Data = data,
                 Message = message,
-                Data = data
+                StatusCode = statusCode,
             };
+
+        /*
+        public static IActionResult WebUniResponse(ServiceResponse<T>? result = default)
+        {
+            if (result != null)
+            {
+                if (!result.Success)
+                    return StatusCode(result.StatusCode, new { error = result.Message });
+
+                return Ok(new { data = result.Data });
+            }
+        }
+        */
     }
 }

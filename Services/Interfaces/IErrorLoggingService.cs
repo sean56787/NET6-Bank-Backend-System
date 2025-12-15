@@ -1,9 +1,10 @@
-﻿using DotNetSandbox.Services.CustomResponse;
+﻿using DotNetSandbox.Models.Data;
+using DotNetSandbox.Services.CustomResponse;
 
 namespace DotNetSandbox.Services.Interfaces
 {
     public interface IErrorLoggingService
     {
-        Task<ServiceResponse<string>> LogErrorAsync(Exception ex);
+        Task<ServiceResponse<ErrorLog>> LogErrorAsync(Exception ex);
     }
 }

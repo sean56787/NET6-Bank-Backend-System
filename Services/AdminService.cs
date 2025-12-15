@@ -11,29 +11,32 @@ namespace DotNetSandbox.Services
     public class AdminService : IAdminService
     {
         private readonly AppDbContext _context;
-        private readonly IConfiguration _config;
 
-        public AdminService(AppDbContext context, IConfiguration config)
+        public AdminService(AppDbContext context)
         {
             _context = context;
-            _config = config;
         }
 
         public async Task<ServiceResponse<UserDTO>> UpdateUser(UpdateUserRequest req)
         {
+
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.UserId || u.Email == req.Email);
 
             if (user == null)
-            {
                 return ServiceResponse<UserDTO>.NotFound("user not found");
-            }
 
             if (!string.IsNullOrWhiteSpace(req.Username))
                 user.Username = req.Username;
 
             if (!string.IsNullOrWhiteSpace(req.Email))
-                user.Email = req.Email;
-
+            {
+                var user2 = await _context.Users.FirstOrDefaultAsync(u => u.Email == req.Email);
+                if(user != user2)
+                    return ServiceResponse<UserDTO>.Error(message:"email registed by other acount", statusCode:409);
+                else
+                    user.Email = req.Email;
+            }
+            
             if (!string.IsNullOrWhiteSpace(req.Password))
             {
                 var newHashedPassword = BCrypt.Net.BCrypt.HashPassword(req.Password);
@@ -66,7 +69,7 @@ namespace DotNetSandbox.Services
         {
             var result = await _context.Users.AnyAsync(u => u.Username == req.Username || u.Email == req.Email);
             if (result)
-                return ServiceResponse<UserDTO>.Error(message: "error: user/email exist", statusCode: 409);
+                return ServiceResponse<UserDTO>.Error(message: "user/email exist", statusCode: 409);
 
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(req.Password);
 
@@ -92,22 +95,16 @@ namespace DotNetSandbox.Services
             };
 
             if (userDTO != null)
-            {
                 return ServiceResponse<UserDTO>.Ok(message: "user created success", data: userDTO);
-            }
             else
-            {
                 return ServiceResponse<UserDTO>.Error(message: "process fail when create userDTO", statusCode: 500);
-            }
         }
 
         public async Task<ServiceResponse<UserDTO>> DeleteUser(DeleteUserRequest req)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.UserId);
             if (user == null)
-            {
                 return ServiceResponse<UserDTO>.NotFound(message: "user not found");
-            }
 
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
@@ -155,14 +152,12 @@ namespace DotNetSandbox.Services
             UserDTO? userDTO = null;
 
             if (user == null)
-            {
                 return ServiceResponse<UserDTO>.NotFound(message: "no user to frozen, user not found", statusCode: 404);
-            }
 
             if (user.IsActive == false)
             {
                 userDTO = new UserDTO { Username = user.Username, IsActive = user.IsActive };
-                return ServiceResponse<UserDTO>.Error(userDTO, message: "user is been frozen, no action", statusCode: 409);
+                return ServiceResponse<UserDTO>.Error(data: userDTO, message: "user is been frozen, no action", statusCode: 403);
             }
 
             user.IsActive = false;
@@ -176,7 +171,7 @@ namespace DotNetSandbox.Services
                 IsActive = user.IsActive
             };
 
-            return ServiceResponse<UserDTO>.Ok(userDTO, message: "frozen user success");
+            return ServiceResponse<UserDTO>.Ok(data: userDTO, message: "frozen user success");
         }
     }
 }

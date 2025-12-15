@@ -1,10 +1,13 @@
-﻿namespace DotNetSandbox.Services.MiddleWares
+﻿using DotNetSandbox.Services.CustomResponse;
+using DotNetSandbox.Services.Interfaces;
+using DotNetSandbox.Models.Data;
+namespace DotNetSandbox.Services.MiddleWares
 {
     public class ExceptionHandlingMW : IMiddleware
     {
-        private readonly ErrorLoggingService _errorLoggingService;
+        private readonly IErrorLoggingService _errorLoggingService;
 
-        public ExceptionHandlingMW(ErrorLoggingService errorLoggingService)
+        public ExceptionHandlingMW(IErrorLoggingService errorLoggingService)
         {
             _errorLoggingService = errorLoggingService;
         }
@@ -18,16 +21,21 @@
             }
             catch(Exception ex)
             {
-                await _errorLoggingService.LogErrorAsync(ex);
-
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                 context.Response.ContentType = "application/json";
-                var res = new
-                {
-                    StatusCode = 666,
-                    Message = "喔喔!?",
-                };
+                ServiceResponse<ErrorLog> result =  await _errorLoggingService.LogErrorAsync(ex);
 
-                await context.Response.WriteAsJsonAsync(res);
+                if (result.Success)
+                {
+                    var log = result.Data;
+                    await context.Response.WriteAsJsonAsync(log);
+                }
+                else
+                {
+                    var fail = ServiceResponse<string>.Error(message: "server unvailable now, pls try again later...", statusCode: 500);
+                    await context.Response.WriteAsJsonAsync(fail);
+                }
+                
             }
         }
     }
