@@ -15,19 +15,19 @@ namespace DotNetSandbox.Services.Utility
             _context = context;
         }
 
-        public async Task<ServiceResponse<UserBalanceDTO>> IsValidOperation(DepositRequest req)
+        public async Task<SystemResponse<UserBalanceDTO>> IsValidOperation(DepositRequest req)
         {
             if(req.Amount <= 0)
             {
-                return ServiceResponse<UserBalanceDTO>.Error(message: "amount of deposit can not be negative", statusCode: 403);
+                return SystemResponse<UserBalanceDTO>.Error(message: "amount of deposit can not be negative", statusCode: 403);
             }
 
             if(req.Amount > 100000)
             {
-                return ServiceResponse<UserBalanceDTO>.Error(message: "can not deposit over $100,000", statusCode: 403);
+                return SystemResponse<UserBalanceDTO>.Error(message: "can not deposit over $100,000", statusCode: 403);
             }
 
-            return ServiceResponse<UserBalanceDTO>.Ok();
+            return SystemResponse<UserBalanceDTO>.Ok();
         }
     }
 }

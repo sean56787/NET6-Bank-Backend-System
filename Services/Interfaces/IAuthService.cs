@@ -5,6 +5,6 @@ namespace DotNetSandbox.Services.Interfaces
 {
     public interface IAuthService
     {
-        ServiceResponse<string> GenerateToken(UserDTO user);
+        SystemResponse<string> GenerateToken(UserDTO user);
     }
 }

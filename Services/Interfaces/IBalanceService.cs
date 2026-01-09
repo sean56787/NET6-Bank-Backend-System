@@ -6,11 +6,11 @@ namespace DotNetSandbox.Services.Interfaces
 {
     public interface IBalanceService
     {
-        Task<ServiceResponse<UserBalanceDTO>> AdjustBalanceAsync(AdjustBalanceRequest req, string operatorName);
-        Task<ServiceResponse<UserTransactionDTO>> GetTransactions(TransactionsRequest req, string operatorName);
+        Task<SystemResponse<UserBalanceDTO>> AdjustBalanceAsync(AdjustBalanceRequest req, string operatorName);
+        Task<SystemResponse<UserTransactionDTO>> GetTransactions(TransactionsRequest req, string operatorName);
         // Task<ServiceResponse<SoloTransactionRequest>> GetSoloTransactions(SoloTransactionRequest req);
-        Task<ServiceResponse<UserBalanceDTO>> DepositAsync(DepositRequest req, string operatorName);
-        Task<ServiceResponse<UserBalanceDTO>> WithdrawAsync(WithdrawRequest req, string operatorName);
-        Task<ServiceResponse<UserBalanceDTO>> TransferAsync(TransferRequest req, string operatorName);
+        Task<SystemResponse<UserBalanceDTO>> DepositAsync(DepositRequest req, string operatorName);
+        Task<SystemResponse<UserBalanceDTO>> WithdrawAsync(WithdrawRequest req, string operatorName);
+        Task<SystemResponse<UserBalanceDTO>> TransferAsync(TransferRequest req, string operatorName);
     }
 }

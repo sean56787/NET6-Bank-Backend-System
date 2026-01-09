@@ -20,7 +20,7 @@ namespace DotNetSandbox.Services
             _config = config;
         }
 
-        public ServiceResponse<string> GenerateToken(UserDTO user)
+        public SystemResponse<string> GenerateToken(UserDTO user)
         {
             var key = Encoding.ASCII.GetBytes(_config["Jwt:Key"]);
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -40,7 +40,7 @@ namespace DotNetSandbox.Services
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenString = tokenHandler.WriteToken(token);
 
-            return ServiceResponse<string>.Ok(data: tokenString, message: "token generate success");
+            return SystemResponse<string>.Ok(data: tokenString, message: "token generate success");
         }
     }
 }

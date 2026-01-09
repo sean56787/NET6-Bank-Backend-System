@@ -17,21 +17,21 @@ namespace DotNetSandbox.Services.Utility
             _context = context;
         }
 
-        public async Task<ServiceResponse<UserBalanceDTO>> IsValidOperation(WithdrawRequest req)
+        public async Task<SystemResponse<UserBalanceDTO>> IsValidOperation(WithdrawRequest req)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.UserId);
 
             if (req.Amount <= 0)
             {
-                return ServiceResponse<UserBalanceDTO>.Error(message: "amount of Withdraw can not be negative", statusCode: 403);
+                return SystemResponse<UserBalanceDTO>.Error(message: "amount of Withdraw can not be negative", statusCode: 403);
             }
 
             if (req.Amount > 50000)
             {
-                return ServiceResponse<UserBalanceDTO>.Error(message: "can not Withdraw over $50,000", statusCode: 403);
+                return SystemResponse<UserBalanceDTO>.Error(message: "can not Withdraw over $50,000", statusCode: 403);
             }
 
-            return ServiceResponse<UserBalanceDTO>.Ok();
+            return SystemResponse<UserBalanceDTO>.Ok();
         }
     }
 }

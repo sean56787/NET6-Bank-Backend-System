@@ -92,7 +92,7 @@ namespace DotNetSandbox.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ErrorLogs");
+                    b.ToTable("ServerLogs");
                 });
 
             modelBuilder.Entity("DotNetSandbox.Models.Data.TransferLog", b =>

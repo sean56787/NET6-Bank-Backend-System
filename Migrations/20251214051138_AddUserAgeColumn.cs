@@ -10,7 +10,7 @@ namespace DotNetSandbox.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "ErrorLogs",
+                name: "ServerLogs",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
@@ -33,7 +33,7 @@ namespace DotNetSandbox.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "ErrorLogs");
+                name: "ServerLogs");
         }
     }
 }

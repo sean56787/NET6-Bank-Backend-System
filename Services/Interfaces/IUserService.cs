@@ -6,8 +6,8 @@ namespace DotNetSandbox.Services.Interfaces
 {
     public interface IUserService
     {
-        Task<ServiceResponse<UserDTO>> Register(RegisterRequest req);
-        Task<ServiceResponse<UserDTO>> Login(LoginRequest req);
-        Task<ServiceResponse<UserDTO>> Verify(string email);
+        Task<SystemResponse<UserDTO>> Register(RegisterRequest req);
+        Task<SystemResponse<UserDTO>> Login(LoginRequest req);
+        Task<SystemResponse<UserDTO>> Verify(string email);
     }
 }

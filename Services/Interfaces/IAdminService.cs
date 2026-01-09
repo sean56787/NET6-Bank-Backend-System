@@ -6,11 +6,11 @@ namespace DotNetSandbox.Services.Interfaces
 {
     public interface IAdminService
     {
-        Task<ServiceResponse<UserDTO>> UpdateUser(UpdateUserRequest req);
-        Task<ServiceResponse<UserDTO>> CreateUser(CreateUserRequest req);
-        Task<ServiceResponse<UserDTO>> DeleteUser(DeleteUserRequest req);
-        Task<ServiceResponse<UserDTO>> GetUser(GetUserRequest req);
-        Task<ServiceResponse<List<UserDTO>>> GetAllUsers();
-        Task<ServiceResponse<UserDTO>> FrozenUser(FrozenUserRequest req);
+        Task<SystemResponse<UserDTO>> UpdateUser(UpdateUserRequest req);
+        Task<SystemResponse<UserDTO>> CreateUser(CreateUserRequest req);
+        Task<SystemResponse<UserDTO>> DeleteUser(DeleteUserRequest req);
+        Task<SystemResponse<UserDTO>> GetUser(GetUserRequest req);
+        Task<SystemResponse<List<UserDTO>>> GetAllUsers();
+        Task<SystemResponse<UserDTO>> FrozenUser(FrozenUserRequest req);
     }
 }

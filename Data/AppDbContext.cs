@@ -7,8 +7,9 @@ namespace DotNetSandbox.Data
     {
         public DbSet<User> Users { get; set; }
         public DbSet<BalanceLog> BalanceLogs { get; set; }
-        public DbSet<TransferLog> TransferLogs { get; set; }
-        public DbSet<ErrorLog> ErrorLogs { get; set; }
+        public DbSet<UserBalanceTransferLog> TransferLogs { get; set; }
+        public DbSet<ServerLog> ServerLogs { get; set; }
+        public DbSet<WebLog> WebLogs { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {

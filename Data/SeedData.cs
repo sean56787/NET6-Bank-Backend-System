@@ -1,4 +1,5 @@
-﻿using DotNetSandbox.Models.Data;
+﻿using DotNetSandbox.Data;
+using DotNetSandbox.Models.Data;
 
 namespace DotNetSandbox.Data
 {

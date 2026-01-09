@@ -6,6 +6,6 @@ namespace DotNetSandbox.Services.Interfaces
 {
     public interface IUserDepositCheck
     {
-        Task<ServiceResponse<UserBalanceDTO>> IsValidOperation(DepositRequest req);
+        Task<SystemResponse<UserBalanceDTO>> IsValidOperation(DepositRequest req);
     }
 }

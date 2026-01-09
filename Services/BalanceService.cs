@@ -24,7 +24,7 @@ namespace DotNetSandbox.Services
             _transferCheck = transferCheck;
         }
 
-        public async Task<ServiceResponse<UserBalanceDTO>> TransferAsync(TransferRequest req, string? operatorName)
+        public async Task<SystemResponse<UserBalanceDTO>> TransferAsync(TransferRequest req, string? operatorName)
         {
             var sender = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.FromUserId);
             var receiver = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.ToUserId);
@@ -43,7 +43,7 @@ namespace DotNetSandbox.Services
                 decimal receiverBalanceAfter = receiverBalanceBefore + req.Amount;
 
                 //加入轉帳紀錄
-                var transferLog = new TransferLog
+                var transferLog = new UserBalanceTransferLog
                 {
                     FromUserId = sender.UserId,
                     ToUserId = receiver.UserId,
@@ -99,7 +99,7 @@ namespace DotNetSandbox.Services
                 await _context.SaveChangesAsync();
 
                 await transaction.CommitAsync();                //成功
-                return ServiceResponse<UserBalanceDTO>.Ok();
+                return SystemResponse<UserBalanceDTO>.Ok();
             }
             catch (Exception e)
             {
@@ -108,13 +108,13 @@ namespace DotNetSandbox.Services
             }
         }
 
-        public async Task<ServiceResponse<UserBalanceDTO>> WithdrawAsync(WithdrawRequest req, string? operatorName)
+        public async Task<SystemResponse<UserBalanceDTO>> WithdrawAsync(WithdrawRequest req, string? operatorName)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.UserId);
 
             if (user == null)
             {
-                return ServiceResponse<UserBalanceDTO>.NotFound("user not found");
+                return SystemResponse<UserBalanceDTO>.NotFound("user not found");
             }
 
             var BalanceBefore = user.Balance;
@@ -122,7 +122,7 @@ namespace DotNetSandbox.Services
 
             if (IsValidWithdraw == null)
             {
-                return ServiceResponse<UserBalanceDTO>.Error(message: "server error", statusCode: 500);
+                return SystemResponse<UserBalanceDTO>.Error(message: "server error", statusCode: 500);
             }
             else if (!IsValidWithdraw.StatusCode.Equals(200))
             {
@@ -165,7 +165,7 @@ namespace DotNetSandbox.Services
                     Balance = user.Balance,
                 };
 
-                return ServiceResponse<UserBalanceDTO>.Ok(result, message: "withdraw successful");
+                return SystemResponse<UserBalanceDTO>.Ok(result, message: "withdraw successful");
             }
             catch (Exception e)
             {
@@ -174,21 +174,21 @@ namespace DotNetSandbox.Services
             }
         }
 
-        public async Task<ServiceResponse<UserBalanceDTO>> DepositAsync(DepositRequest req, string? operatorName)
+        public async Task<SystemResponse<UserBalanceDTO>> DepositAsync(DepositRequest req, string? operatorName)
         {
 
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.UserId);
 
             if (user == null)
             {
-                return ServiceResponse<UserBalanceDTO>.NotFound("user not found");
+                return SystemResponse<UserBalanceDTO>.NotFound("user not found");
             }
             var BalanceBefore = user.Balance;
             var IsValidDeposit = await _depositCheck.IsValidOperation(req);
 
             if (IsValidDeposit == null)
             {
-                return ServiceResponse<UserBalanceDTO>.Error(message: "server error", statusCode: 500);
+                return SystemResponse<UserBalanceDTO>.Error(message: "server error", statusCode: 500);
             }
             else if (!IsValidDeposit.StatusCode.Equals(200))
             {
@@ -230,7 +230,7 @@ namespace DotNetSandbox.Services
                     Balance = user.Balance,
                 };
 
-                return ServiceResponse<UserBalanceDTO>.Ok(result, message: "deposit successful");
+                return SystemResponse<UserBalanceDTO>.Ok(result, message: "deposit successful");
             }
             catch (Exception e)
             {
@@ -239,13 +239,13 @@ namespace DotNetSandbox.Services
             }
         }
 
-        public async Task<ServiceResponse<UserBalanceDTO>> AdjustBalanceAsync(AdjustBalanceRequest req, string? operatorName)
+        public async Task<SystemResponse<UserBalanceDTO>> AdjustBalanceAsync(AdjustBalanceRequest req, string? operatorName)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.UserId);
 
             if (user == null)
             {
-                return ServiceResponse<UserBalanceDTO>.NotFound("user not found");
+                return SystemResponse<UserBalanceDTO>.NotFound("user not found");
             }
 
             var BalanceBefore = user.Balance;
@@ -279,7 +279,7 @@ namespace DotNetSandbox.Services
                     BalanceBeforeOperation = BalanceBefore,
                     Balance = user.Balance,
                 };
-                return ServiceResponse<UserBalanceDTO>.Ok(result, message: "balance adjusted by admin");
+                return SystemResponse<UserBalanceDTO>.Ok(result, message: "balance adjusted by admin");
             }
             catch (Exception e)
             {
@@ -288,13 +288,13 @@ namespace DotNetSandbox.Services
             }
         }
 
-        public async Task<ServiceResponse<UserTransactionDTO>> GetTransactions(TransactionsRequest req, string? operatorName)
+        public async Task<SystemResponse<UserTransactionDTO>> GetTransactions(TransactionsRequest req, string? operatorName)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.UserId);
 
             if (user == null)
             {
-                return ServiceResponse<UserTransactionDTO>.NotFound("user not found");
+                return SystemResponse<UserTransactionDTO>.NotFound("user not found");
             }
 
             var query = _context.BalanceLogs
@@ -339,7 +339,7 @@ namespace DotNetSandbox.Services
                 }).ToList()
             };
 
-            return ServiceResponse<UserTransactionDTO>.Ok(data: result);
+            return SystemResponse<UserTransactionDTO>.Ok(data: result);
         }
 
         /*

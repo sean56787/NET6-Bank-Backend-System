@@ -11,19 +11,30 @@ namespace DotNetSandbox.Services
     public class AdminService : IAdminService
     {
         private readonly AppDbContext _context;
+        private readonly IWebLogService _webLogService;
 
-        public AdminService(AppDbContext context)
+        public AdminService(AppDbContext context, IWebLogService webLogService)
         {
             _context = context;
+            _webLogService = webLogService;
         }
 
-        public async Task<ServiceResponse<UserDTO>> UpdateUser(UpdateUserRequest req)
+        public async Task<SystemResponse<UserDTO>> UpdateUser(UpdateUserRequest req)
         {
 
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.UserId || u.Email == req.Email);
 
             if (user == null)
-                return ServiceResponse<UserDTO>.NotFound("user not found");
+            {
+                await _webLogService.WebLogWarnings(
+                    "user not found",
+                    DateTime.UtcNow,
+                    Models.Enums.SecurityLevelType.WARN,
+                    StatusCodes.Status404NotFound
+                );
+                return SystemResponse<UserDTO>.NotFound("user not found");
+            }
+                
 
             if (!string.IsNullOrWhiteSpace(req.Username))
                 user.Username = req.Username;
@@ -32,7 +43,15 @@ namespace DotNetSandbox.Services
             {
                 var user2 = await _context.Users.FirstOrDefaultAsync(u => u.Email == req.Email);
                 if(user != user2)
-                    return ServiceResponse<UserDTO>.Error(message:"email registed by other acount", statusCode:409);
+                {
+                    await _webLogService.WebLogWarnings(
+                        "user try to update account info using email, but it was registed by another account",
+                        DateTime.UtcNow,
+                        Models.Enums.SecurityLevelType.WARN,
+                        StatusCodes.Status409Conflict
+                    );
+                    return SystemResponse<UserDTO>.Error(message: "email registed by another acount", statusCode: 409);
+                }
                 else
                     user.Email = req.Email;
             }
@@ -62,15 +81,23 @@ namespace DotNetSandbox.Services
                 Email = user.Email
             };
 
-            return ServiceResponse<UserDTO>.Ok(data: updatedUserDTO);
+            return SystemResponse<UserDTO>.Ok(data: updatedUserDTO);
         }
 
-        public async Task<ServiceResponse<UserDTO>> CreateUser(CreateUserRequest req)
+        public async Task<SystemResponse<UserDTO>> CreateUser(CreateUserRequest req)
         {
             var result = await _context.Users.AnyAsync(u => u.Username == req.Username || u.Email == req.Email);
             if (result)
-                return ServiceResponse<UserDTO>.Error(message: "user/email exist", statusCode: 409);
-
+            {
+                await _webLogService.WebLogWarnings(
+                        "user try to register using email, but it was registed by another account",
+                        DateTime.UtcNow,
+                        Models.Enums.SecurityLevelType.WARN,
+                        StatusCodes.Status409Conflict
+                    );
+                return SystemResponse<UserDTO>.Error(message: "username or email was registed by another acount", statusCode: 409);
+            }
+                
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(req.Password);
 
             var newUser = new User
@@ -95,23 +122,31 @@ namespace DotNetSandbox.Services
             };
 
             if (userDTO != null)
-                return ServiceResponse<UserDTO>.Ok(message: "user created success", data: userDTO);
+                return SystemResponse<UserDTO>.Ok(message: "user created success", data: userDTO);
             else
-                return ServiceResponse<UserDTO>.Error(message: "process fail when create userDTO", statusCode: 500);
+                return SystemResponse<UserDTO>.Error(message: "server error", statusCode: 500);
         }
 
-        public async Task<ServiceResponse<UserDTO>> DeleteUser(DeleteUserRequest req)
+        public async Task<SystemResponse<UserDTO>> DeleteUser(DeleteUserRequest req)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.UserId);
             if (user == null)
-                return ServiceResponse<UserDTO>.NotFound(message: "user not found");
+            {
+                await _webLogService.WebLogWarnings(
+                        "user not found",
+                        DateTime.UtcNow,
+                        Models.Enums.SecurityLevelType.WARN,
+                        StatusCodes.Status409Conflict
+                    );
+                return SystemResponse<UserDTO>.NotFound(message: "user not found");
+            }
 
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
-            return ServiceResponse<UserDTO>.Ok(message: "user deleted"); ;
+            return SystemResponse<UserDTO>.Ok(message: "user deleted");
         }
 
-        public async Task<ServiceResponse<UserDTO>> GetUser(GetUserRequest req)
+        public async Task<SystemResponse<UserDTO>> GetUser(GetUserRequest req)
         {
             var userDTO = await _context.Users.
                 Where(u => u.UserId == req.UserId || u.Email == req.Email).
@@ -124,12 +159,20 @@ namespace DotNetSandbox.Services
                 }).FirstOrDefaultAsync();
 
             if (userDTO == null)
-                return ServiceResponse<UserDTO>.NotFound(message: $"user not found");
+            {
+                await _webLogService.WebLogWarnings(
+                        "user not found",
+                        DateTime.UtcNow,
+                        Models.Enums.SecurityLevelType.WARN,
+                        StatusCodes.Status409Conflict
+                    );
+                return SystemResponse<UserDTO>.NotFound(message: "user not found");
+            }
 
-            return ServiceResponse<UserDTO>.Ok(data: userDTO);
+            return SystemResponse<UserDTO>.Ok(data: userDTO);
         }
 
-        public async Task<ServiceResponse<List<UserDTO>>> GetAllUsers()
+        public async Task<SystemResponse<List<UserDTO>>> GetAllUsers()
         {
             var usersDTO = await _context.Users.Select(u => new UserDTO
             {
@@ -141,23 +184,39 @@ namespace DotNetSandbox.Services
             }).ToListAsync();
 
             if (usersDTO != null)
-                return ServiceResponse<List<UserDTO>>.Ok(data: usersDTO);
+                return SystemResponse<List<UserDTO>>.Ok(data: usersDTO);
             else
-                return ServiceResponse<List<UserDTO>>.Error(message: "users not found");
+            {
+                await _webLogService.WebLogWarnings(
+                        "user not found",
+                        DateTime.UtcNow,
+                        Models.Enums.SecurityLevelType.WARN,
+                        StatusCodes.Status409Conflict
+                    );
+                return SystemResponse<List<UserDTO>>.Error(message: "users not found");
+            }       
         }
 
-        public async Task<ServiceResponse<UserDTO>> FrozenUser(FrozenUserRequest req)
+        public async Task<SystemResponse<UserDTO>> FrozenUser(FrozenUserRequest req)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.UserId);
             UserDTO? userDTO = null;
 
             if (user == null)
-                return ServiceResponse<UserDTO>.NotFound(message: "no user to frozen, user not found", statusCode: 404);
-
+            {
+                await _webLogService.WebLogWarnings(
+                        "user not found",
+                        DateTime.UtcNow,
+                        Models.Enums.SecurityLevelType.WARN,
+                        StatusCodes.Status409Conflict
+                    );
+                return SystemResponse<UserDTO>.NotFound(message: "no user to frozen, user not found", statusCode: 404);
+            }
+                
             if (user.IsActive == false)
             {
                 userDTO = new UserDTO { Username = user.Username, IsActive = user.IsActive };
-                return ServiceResponse<UserDTO>.Error(data: userDTO, message: "user is been frozen, no action", statusCode: 403);
+                return SystemResponse<UserDTO>.Error(data: userDTO, message: "user is been frozen, no action", statusCode: 403);
             }
 
             user.IsActive = false;
@@ -171,7 +230,7 @@ namespace DotNetSandbox.Services
                 IsActive = user.IsActive
             };
 
-            return ServiceResponse<UserDTO>.Ok(data: userDTO, message: "frozen user success");
+            return SystemResponse<UserDTO>.Ok(data: userDTO, message: "frozen user success");
         }
     }
 }

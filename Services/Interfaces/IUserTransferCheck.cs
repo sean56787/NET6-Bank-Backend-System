@@ -7,6 +7,6 @@ namespace DotNetSandbox.Services.Interfaces
 {
     public interface IUserTransferCheck
     {
-        Task<ServiceResponse<UserBalanceDTO>> IsValidOperation(TransferRequest req, User sender, User receiver);
+        Task<SystemResponse<UserBalanceDTO>> IsValidOperation(TransferRequest req, User sender, User receiver);
     }
 }

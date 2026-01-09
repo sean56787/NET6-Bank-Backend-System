@@ -25,7 +25,7 @@ namespace DotNetSandbox.Controllers
 
             if (!result.Success)
                 return StatusCode(result.StatusCode, new { error = result.Message });
-                    
+                
             return Ok(new { message = result.Message, data = result.Data });
         }
 
@@ -86,8 +86,8 @@ namespace DotNetSandbox.Controllers
             return Ok(new { message = result.Message });
         }
 
-        [HttpGet("test-exp")]
-        public async Task<IActionResult> TestExp()
+        [HttpGet("exception-trigger")]
+        public async Task<IActionResult> ExceptionTrigger()
         {
             throw new NullReferenceException();
         }

@@ -16,21 +16,21 @@ namespace DotNetSandbox.Services.Utility
             _context = context;
         }
 
-        public async Task<ServiceResponse<UserBalanceDTO>> IsValidOperation(TransferRequest req, User sender, User receiver)
+        public async Task<SystemResponse<UserBalanceDTO>> IsValidOperation(TransferRequest req, User sender, User receiver)
         {
-            if (sender == null) return ServiceResponse<UserBalanceDTO>.NotFound(message: "sender not found", statusCode: 404);
-            if (receiver == null) return ServiceResponse<UserBalanceDTO>.NotFound(message: "receiver not found", statusCode: 404);
+            if (sender == null) return SystemResponse<UserBalanceDTO>.NotFound(message: "sender not found", statusCode: 404);
+            if (receiver == null) return SystemResponse<UserBalanceDTO>.NotFound(message: "receiver not found", statusCode: 404);
 
             if (string.Equals(req.FromUserId, req.ToUserId))
-                return ServiceResponse<UserBalanceDTO>.Error(message: "you can not transfer to yourself", statusCode: 400);
+                return SystemResponse<UserBalanceDTO>.Error(message: "you can not transfer to yourself", statusCode: 400);
 
             if(req.Amount <= 0)
-                return ServiceResponse<UserBalanceDTO>.Error(message: "the amount of transfer can not equal/below 0$", statusCode: 400);
+                return SystemResponse<UserBalanceDTO>.Error(message: "the amount of transfer can not equal/below 0$", statusCode: 400);
 
             if (sender.Balance < req.Amount) 
-                return ServiceResponse<UserBalanceDTO>.Error(message: "your balance is not sufficient to transfer, pls deposit first", statusCode: 402);
+                return SystemResponse<UserBalanceDTO>.Error(message: "your balance is not sufficient to transfer, pls deposit first", statusCode: 402);
 
-            return ServiceResponse<UserBalanceDTO>.Ok();
+            return SystemResponse<UserBalanceDTO>.Ok();
         }
     }
 }

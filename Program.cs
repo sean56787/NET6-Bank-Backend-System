@@ -21,8 +21,9 @@ builder.Services.AddScoped<IBalanceService, BalanceService>();          // SCOPE
 builder.Services.AddScoped<IUserWithdrawCheck, UserWithdrawCheck>();    // SCOPED
 builder.Services.AddScoped<IUserDepositCheck, UserDepositCheck>();      // SCOPED
 builder.Services.AddScoped<IUserTransferCheck, UserTransferCheck>();    // SCOPED
-builder.Services.AddScoped<IErrorLoggingService, ErrorLoggingService>();// SCOPED
-builder.Services.AddTransient<ExceptionHandlingMW>();                      // Transient
+builder.Services.AddScoped<IServerLogService, ServerLogService>();      // SCOPED
+builder.Services.AddScoped<IWebLogService, WebLogService>();            // SCOPED
+builder.Services.AddTransient<ExceptionHandlingMW>();                   // Transient
 
 builder.Services.AddAuthentication(options =>
 {

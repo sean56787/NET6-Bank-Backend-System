@@ -6,6 +6,6 @@ namespace DotNetSandbox.Services.Interfaces
 {
     public interface IUserWithdrawCheck
     {
-        Task<ServiceResponse<UserBalanceDTO>> IsValidOperation(WithdrawRequest req);
+        Task<SystemResponse<UserBalanceDTO>> IsValidOperation(WithdrawRequest req);
     }
 }

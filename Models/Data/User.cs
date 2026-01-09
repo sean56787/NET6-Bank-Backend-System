@@ -26,6 +26,6 @@ namespace DotNetSandbox.Models.Data
 
         //navigate
         public List<BalanceLog> BalanceLogs { get; set; } = new ();
-        public List<TransferLog> TransferLog { get; set; } = new();
+        public List<UserBalanceTransferLog> TransferLog { get; set; } = new();
     }
 }
