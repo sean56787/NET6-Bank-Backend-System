@@ -11,6 +11,6 @@ namespace DotNetSandbox.Services.Interfaces
         // Task<ServiceResponse<SoloTransactionRequest>> GetSoloTransactions(SoloTransactionRequest req);
         Task<SystemResponse<UserBalanceDTO>> DepositAsync(DepositRequest req, string operatorName);
         Task<SystemResponse<UserBalanceDTO>> WithdrawAsync(WithdrawRequest req, string operatorName);
-        Task<SystemResponse<UserBalanceDTO>> TransferAsync(TransferRequest req, string operatorName);
+        Task<SystemResponse<UserBalanceDTO>> C2CTransferAsync(TransferRequest req, string operatorName);
     }
 }

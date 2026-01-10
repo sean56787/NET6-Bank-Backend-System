@@ -7,6 +7,8 @@ using DotNetSandbox.Services.Interfaces;
 using DotNetSandbox.Services.Utility;
 using DotNetSandbox.Services;
 using DotNetSandbox.Services.MiddleWares;
+using DotNetSandbox.Repositories.Interfaces;
+using DotNetSandbox.Repositories;
 
 var builder = WebApplication.CreateBuilder(args); // ªì©l¤ÆASP.NET Core App
 
@@ -23,6 +25,7 @@ builder.Services.AddScoped<IUserDepositCheck, UserDepositCheck>();      // SCOPE
 builder.Services.AddScoped<IUserTransferCheck, UserTransferCheck>();    // SCOPED
 builder.Services.AddScoped<IServerLogService, ServerLogService>();      // SCOPED
 builder.Services.AddScoped<IWebLogService, WebLogService>();            // SCOPED
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();                  // SCOPED
 builder.Services.AddTransient<ExceptionHandlingMW>();                   // Transient
 
 builder.Services.AddAuthentication(options =>

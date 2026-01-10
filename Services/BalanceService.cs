@@ -5,35 +5,44 @@ using DotNetSandbox.Models.DTOs.Output;
 using DotNetSandbox.Models.DTOs.Input;
 using DotNetSandbox.Services.CustomResponse;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection;
+using DotNetSandbox.Repositories.Interfaces;
 
 namespace DotNetSandbox.Services
 {
     public class BalanceService : IBalanceService
     {
         private readonly AppDbContext _context;
+        private readonly IUnitOfWork _uow;
         private readonly IUserWithdrawCheck _withdrawCheck;
         private readonly IUserDepositCheck _depositCheck;
         private readonly IUserTransferCheck _transferCheck;
+        private readonly IBalanceRepository _balanceRepositories;//repo
 
-        public BalanceService(AppDbContext context, IUserWithdrawCheck withdrawCheck, IUserDepositCheck depositCheck, IUserTransferCheck transferCheck)
+        public BalanceService(AppDbContext context, 
+                    IUnitOfWork uow,
+                    IUserWithdrawCheck withdrawCheck,
+                    IUserDepositCheck depositCheck,
+                    IUserTransferCheck transferCheck,
+                    IBalanceRepository balanceRepositories)
         {
             _context = context;
             _withdrawCheck = withdrawCheck;
             _depositCheck = depositCheck;
             _transferCheck = transferCheck;
+            _balanceRepositories = balanceRepositories;
+            _uow = uow;
         }
 
-        public async Task<SystemResponse<UserBalanceDTO>> TransferAsync(TransferRequest req, string? operatorName)
+        public async Task<SystemResponse<UserBalanceDTO>> C2CTransferAsync(TransferRequest req, string? operatorName)
         {
-            var sender = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.FromUserId);
-            var receiver = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.ToUserId);
+            var sender = await _uow.Users.GetUserByUserId(req.FromUserId);
+            var receiver = await _uow.Users.GetUserByUserId(req.ToUserId);
 
             var IsValidTransfer = await _transferCheck.IsValidOperation(req, sender, receiver);
             if (!IsValidTransfer.StatusCode.Equals(200))
                 return IsValidTransfer;
 
-            using var transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable); // 建立交易控制
+            await _uow.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);// 建立交易控制
             try
             {
                 decimal senderBalanceBefore = sender.Balance;

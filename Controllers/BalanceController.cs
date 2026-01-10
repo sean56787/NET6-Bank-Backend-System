@@ -23,7 +23,7 @@ namespace DotNetSandbox.Controllers
         {
             try
             {
-                var result = await _balanceService.TransferAsync(req, User.Identity?.Name);
+                var result = await _balanceService.C2CTransferAsync(req, User.Identity?.Name);
 
                 return StatusCode(result.StatusCode, result.Message);
             } 
