@@ -20,5 +20,10 @@ namespace DotNetSandbox.Repositories
         {
             return await _dbSet.FindAsync(id);
         }
+        
+        public void Update(T entity)
+        {
+            _dbSet.Update(entity);
+        }
     }
 }

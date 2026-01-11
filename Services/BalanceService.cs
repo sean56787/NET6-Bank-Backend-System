@@ -35,21 +35,33 @@ namespace DotNetSandbox.Services
 
         public async Task<SystemResponse<UserBalanceDTO>> C2CTransferAsync(TransferRequest req, string? operatorName)
         {
-            var sender = await _uow.Users.GetUserByUserId(req.FromUserId);
-            var receiver = await _uow.Users.GetUserByUserId(req.ToUserId);
-
-            var IsValidTransfer = await _transferCheck.IsValidOperation(req, sender, receiver);
-            if (!IsValidTransfer.StatusCode.Equals(200))
-                return IsValidTransfer;
-
             await _uow.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);// 建立交易控制
+                
             try
             {
+                var userRepo = _uow.Users;
+
+                var firstId = req.FromUserId < req.ToUserId ? req.FromUserId : req.ToUserId;
+                var secondId = req.FromUserId < req.ToUserId ? req.ToUserId : req.FromUserId;
+
+                var firstUser = await _uow.Users.GetUserByUserId(firstId);
+                var secondUser = await _uow.Users.GetUserByUserId(secondId);
+
+                var sender = firstId == req.FromUserId ? firstUser : secondUser;
+                var receiver = firstId == req.ToUserId ? firstUser : secondUser;
+
+                var IsValidTransfer = await _transferCheck.IsValidOperation(req, sender, receiver);
+                if (!IsValidTransfer.StatusCode.Equals(200))
+                {
+                    await _uow.RollBackTransactionAsync();
+                    return IsValidTransfer;
+                }
+
                 decimal senderBalanceBefore = sender.Balance;
                 decimal receiverBalanceBefore = receiver.Balance;
 
-                decimal senderBalanceAfter = senderBalanceBefore - req.Amount;
-                decimal receiverBalanceAfter = receiverBalanceBefore + req.Amount;
+                sender.Balance -= req.Amount;
+                receiver.Balance += req.Amount;
 
                 //加入轉帳紀錄
                 var transferLog = new UserBalanceTransferLog

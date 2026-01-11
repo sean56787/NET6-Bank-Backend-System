@@ -31,27 +31,51 @@ namespace DotNetSandbox.Repositories
 
         public async Task BeginTransactionAsync(IsolationLevel isolationLevel = IsolationLevel.ReadUncommitted)
         {
+            if (_currentTransaction != null) return;
             _currentTransaction = await _context.Database.BeginTransactionAsync(isolationLevel);
         }
 
-        public Task CommitTransactionAsync()
+        public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            return await _context.SaveChangesAsync(cancellationToken);
         }
 
-        public Task RollBackTransactionAsync()
+        public async Task CommitTransactionAsync()
         {
-            throw new NotImplementedException();
+            try
+            {
+                await _context.SaveChangesAsync();
+                if (_currentTransaction != null)
+                {
+                    await _currentTransaction.CommitAsync();
+                }
+            }
+            catch
+            {
+                await _currentTransaction.RollbackAsync();
+            }
+            finally
+            {
+                await DisposeTransactionAsync();
+            }
         }
 
-        public async Task<int> CompleteAsync()
+        public async Task RollBackTransactionAsync()
         {
-            return await _context.SaveChangesAsync();
+            if (_currentTransaction != null)
+            {
+                await _currentTransaction.RollbackAsync();
+                await DisposeTransactionAsync();
+            }
         }
 
-        public void Dispose()
+        private async Task DisposeTransactionAsync()
         {
-            _context.Dispose();
+            if (_currentTransaction != null)
+            {
+                await _currentTransaction.DisposeAsync();
+                _currentTransaction = null;
+            }
         }
     }
 }

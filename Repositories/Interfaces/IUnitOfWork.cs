@@ -2,7 +2,7 @@
 using System.Data;
 namespace DotNetSandbox.Repositories.Interfaces
 {
-    public interface IUnitOfWork :IDisposable
+    public interface IUnitOfWork
     {
         IUserRepository Users { get; }
         IGenericRepository<BalanceLog> BalanceLogs { get; }
@@ -11,9 +11,8 @@ namespace DotNetSandbox.Repositories.Interfaces
         IGenericRepository<WebLog> WebLogs { get; }
 
         Task BeginTransactionAsync(IsolationLevel isolationLevel = IsolationLevel.ReadUncommitted);
+        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
         Task CommitTransactionAsync();
         Task RollBackTransactionAsync();
-
-        Task<int> CompleteAsync(); // 統一提交事務
     }
 }
