@@ -17,14 +17,16 @@ namespace DotNetSandbox.Services
         private readonly IUserWithdrawCheck _withdrawCheck;
         private readonly IUserDepositCheck _depositCheck;
         private readonly IUserTransferCheck _transferCheck;
-        private readonly IBalanceRepository _balanceRepositories;//repo
+        private readonly IBalanceRepository _balanceRepositories;
+        private readonly IServiceCommandCenter _serviceCommandCenter;
 
         public BalanceService(AppDbContext context, 
                     IUnitOfWork uow,
                     IUserWithdrawCheck withdrawCheck,
                     IUserDepositCheck depositCheck,
                     IUserTransferCheck transferCheck,
-                    IBalanceRepository balanceRepositories)
+                    IBalanceRepository balanceRepositories,
+                    IServiceCommandCenter serviceCommandCenter)
         {
             _context = context;
             _withdrawCheck = withdrawCheck;
@@ -32,23 +34,18 @@ namespace DotNetSandbox.Services
             _transferCheck = transferCheck;
             _balanceRepositories = balanceRepositories;
             _uow = uow;
+            _serviceCommandCenter = serviceCommandCenter;
         }
 
-        public async Task<SystemResponse<UserBalanceDTO>> C2CTransferAsync(TransferRequest req, string? operatorName)
+        public async Task<SystemResponse> C2CTransferAsync(TransferRequest req, string? operatorName)
         {
-            if (string.IsNullOrEmpty(req.RequestKey))
+            var RequestKeyCheck = await _serviceCommandCenter.RequestKeyCheck(req.RequestKey);
+            if (!RequestKeyCheck.Success)
             {
-                return SystemResponse<UserBalanceDTO>.Error(message: "缺少請求唯一標識", statusCode: 401);
-            }
-
-            var isProcessed = await _uow.TransferLogs.AnyAsync(x => x.RequestKey == req.RequestKey);
-            if (isProcessed)
-            {
-                return SystemResponse<UserBalanceDTO>.Error(message: "重複請求，請稍後再試", statusCode: 429);
+                return SystemResponse.Error(message: RequestKeyCheck.Message, statusCode: RequestKeyCheck.StatusCode);
             }
 
             await _uow.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);      // 建立交易控制-TODO: 將IsolationLevel改更寬鬆並配合rowVersion+TimeStamp
-
             try
             {
                 var userRepo = _uow.Users;
@@ -62,11 +59,11 @@ namespace DotNetSandbox.Services
                 var sender = firstId == req.FromUserId ? firstUser : secondUser;
                 var receiver = firstId == req.ToUserId ? firstUser : secondUser;
 
-                var IsValidTransfer = await _transferCheck.IsValidOperation(req, sender, receiver);
-                if (!IsValidTransfer.StatusCode.Equals(200))
+                var ValidTransferCheck = await _transferCheck.IsValidOperation(req, sender, receiver);
+                if (!ValidTransferCheck.StatusCode.Equals(200))
                 {
                     await _uow.RollBackTransactionAsync();
-                    return IsValidTransfer;
+                    return ValidTransferCheck;
                 }
 
                 decimal senderBalanceBefore = sender.Balance;
@@ -130,17 +127,17 @@ namespace DotNetSandbox.Services
 
                 await _uow.SaveChangesAsync();                      
                 await _uow.CommitTransactionAsync();                //實際DB操作
-                return SystemResponse<UserBalanceDTO>.Ok();
+                return SystemResponse.Ok();
             }
             catch(DbUpdateConcurrencyException cccEx)
             {
                 await _uow.RollBackTransactionAsync();
-                return SystemResponse<UserBalanceDTO>.Error(message: "system busy, try later", statusCode: 500);
+                return SystemResponse.Error(message: "system busy, try later", statusCode: 500);
             }
             catch(UniqueConstraintException ucEx)
             {
                 await _uow.RollBackTransactionAsync();
-                return SystemResponse<UserBalanceDTO>.Error(message: "請求處理中或已完成", statusCode: 500);
+                return SystemResponse.Error(message: "請求處理中或已完成", statusCode: 500);
             }
             catch(Exception ex)
             {
@@ -149,40 +146,43 @@ namespace DotNetSandbox.Services
             }
         }
 
-        public async Task<SystemResponse<UserBalanceDTO>> WithdrawAsync(WithdrawRequest req, string? operatorName)
+        public async Task<SystemResponse> WithdrawAsync(WithdrawRequest req, string? operatorName)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.UserId);
-
-            if (user == null)
+            var RequestKeyCheck = await _serviceCommandCenter.RequestKeyCheck(req.RequestKey);
+            if (!RequestKeyCheck.Success)
             {
-                return SystemResponse<UserBalanceDTO>.NotFound("user not found");
+                return SystemResponse.Error(message: RequestKeyCheck.Message ?? "", statusCode: RequestKeyCheck.StatusCode);
             }
 
-            var BalanceBefore = user.Balance;
-            var IsValidWithdraw = await _withdrawCheck.IsValidOperation(req);
-
-            if (IsValidWithdraw == null)
-            {
-                return SystemResponse<UserBalanceDTO>.Error(message: "server error", statusCode: 500);
-            }
-            else if (!IsValidWithdraw.StatusCode.Equals(200))
-            {
-                return IsValidWithdraw;
-            }
-
-            using var transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable); // 序列化 > 阻擋其他交易的寫入 > 一致性
+            await _uow.BeginTransactionAsync(System.Data.IsolationLevel.Serializable); // 序列化 > 阻擋其他交易的寫入 > 一致性 > 鎖住整個資料範圍(最嚴格)
 
             try
             {
-                decimal UserUpdatedBalance = user.Balance - req.Amount;
+                //找User
+                var user = await _uow.Users.GetByIdAsync(req.UserId);
+                if (user == null)
+                {
+                    return SystemResponse.NotFound("user not found");
+                }
 
-                await _context.Database
-                    .ExecuteSqlRawAsync(
-                         $"UPDATE Users SET Balance = {UserUpdatedBalance} WHERE UserId = {user.UserId}"
-                    );
-                await _context.SaveChangesAsync();
+                //確認是否可以Draw
+                var ValidDrawCheck = await _withdrawCheck.IsValidOperation(req);
+                if (ValidDrawCheck == null)
+                {
+                    return SystemResponse.Error(message: "server error", statusCode: 500);
+                }
+                else if (!ValidDrawCheck.StatusCode.Equals(200))
+                {
+                    return ValidDrawCheck;
+                }
 
-                _context.BalanceLogs.Add(new BalanceLog
+                //紀錄動作前餘額
+                var BalanceBefore = user.Balance;
+                //更改餘額
+                user.Balance -= req.Amount;
+                await _uow.SaveChangesAsync();
+
+                _uow.BalanceLogs.Add(new BalanceLog
                 {
                     UserId = user.UserId,
                     Amount = req.Amount,
@@ -193,24 +193,25 @@ namespace DotNetSandbox.Services
                     CreatedAt = DateTime.Now,
                     Operator = operatorName ?? user.Username,
                 });
-                await _context.SaveChangesAsync();
-
-                await transaction.CommitAsync();                //確認提交
-
-                var result = new UserBalanceDTO
-                {
-                    UserId = user.UserId,
-                    Username = user.Username,
-                    Type = req.Type,
-                    BalanceBeforeOperation = BalanceBefore,
-                    Balance = user.Balance,
-                };
-
-                return SystemResponse<UserBalanceDTO>.Ok(result, message: "withdraw successful");
+                
+                await _uow.SaveChangesAsync();
+                await _uow.CommitTransactionAsync();                //確認提交
+                
+                return SystemResponse.Ok(message: "withdraw successful");
             }
-            catch (Exception e)
+            catch (DbUpdateConcurrencyException cccEx)
             {
-                await transaction.RollbackAsync();              //取消交易
+                await _uow.RollBackTransactionAsync();
+                return SystemResponse.Error(message: "system busy, try later", statusCode: 500);
+            }
+            catch (UniqueConstraintException ucEx)
+            {
+                await _uow.RollBackTransactionAsync();
+                return SystemResponse.Error(message: "請求處理中或已完成", statusCode: 500);
+            }
+            catch (Exception ex)
+            {
+                await _uow.RollBackTransactionAsync();             //取消交易
                 throw;
             }
         }

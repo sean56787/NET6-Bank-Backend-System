@@ -3,15 +3,43 @@ using System.Text.Json.Serialization;
 
 namespace DotNetSandbox.Services.CustomResponse
 {
-    public class SystemResponse<T>
+    public class SystemResponse
     {
         public bool Success { get; set; }
         public int StatusCode { get; set; }
         public string? Message { get; set; }
+
+        public static SystemResponse Ok(string message = "success", int statusCode = 200) =>
+            new()
+            {
+                Success = true,
+                Message = message,
+                StatusCode = statusCode,
+            };
+
+        public static SystemResponse NotFound(string message = "not found", int statusCode = 404) =>
+            new()
+            {
+                Success = false,
+                Message = message,
+                StatusCode = statusCode,
+            };
+
+        public static SystemResponse Error(string message = "error", int statusCode = 500) =>
+            new()
+            {
+                Success = false,
+                Message = message,
+                StatusCode = statusCode,
+            };
+    }
+
+    public class SystemResponse<T> : SystemResponse
+    {
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public T? Data { get; set; }
 
-        public static SystemResponse<T> Ok(T? data = default, string message = "success", int statusCode = 200) =>
+        public static SystemResponse<T>? Ok(T? data = default, string message = "success", int statusCode = 200) =>
             new()
             {
                 Success = true,
@@ -20,7 +48,7 @@ namespace DotNetSandbox.Services.CustomResponse
                 StatusCode = statusCode,
             };
 
-        public static SystemResponse<T> NotFound(string message = "not found", int statusCode = 404) =>
+        public static new SystemResponse<T>? NotFound(string message = "not found", int statusCode = 404) =>
             new()
             {
                 Success = false,
@@ -28,7 +56,7 @@ namespace DotNetSandbox.Services.CustomResponse
                 StatusCode = statusCode,
             };
 
-        public static SystemResponse<T> Error(T? data = default, string message = "error", int statusCode = 500) =>
+        public static SystemResponse<T>? Error(T? data = default, string message = "error", int statusCode = 500) =>
             new()
             {
                 Success = false,
@@ -36,18 +64,5 @@ namespace DotNetSandbox.Services.CustomResponse
                 Message = message,
                 StatusCode = statusCode,
             };
-
-        /*
-        public static IActionResult WebUniResponse(ServiceResponse<T>? result = default)
-        {
-            if (result != null)
-            {
-                if (!result.Success)
-                    return StatusCode(result.StatusCode, new { error = result.Message });
-
-                return Ok(new { data = result.Data });
-            }
-        }
-        */
     }
 }

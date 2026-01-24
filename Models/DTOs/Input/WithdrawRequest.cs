@@ -17,5 +17,9 @@ namespace DotNetSandbox.Models.DTOs.Input
         public BalanceType Type { get; set; } = BalanceType.Default;
 
         public string? Description { get; set; }
+
+        [Required]
+        [StringLength(64)]
+        public string RequestKey { get; set; }
     }
 }
