@@ -72,8 +72,8 @@ namespace DotNetSandbox.Services
                     CreatedAt = DateTime.Now,
                     Description = req.Description ?? "",
                 };
-                _context.TransferLogs.Add(transferLog);
-                await _context.SaveChangesAsync();
+                _uow.TransferLogs.Add(transferLog);
+                await _uow.SaveChangesAsync();
 
                 //加入轉出方紀錄
                 var fromBalanceLog = new BalanceLog
@@ -81,15 +81,15 @@ namespace DotNetSandbox.Services
                     UserId = sender.UserId,
                     Amount = -req.Amount,
                     BalanceBefore = senderBalanceBefore,
-                    Balance = senderBalanceAfter,
+                    Balance = sender.Balance,
                     Type = Models.Enums.BalanceType.TransferOut,
                     Description = req.Description ?? "",
                     Operator = operatorName ?? sender.Username,
                     CreatedAt = DateTime.Now,
                     TransactionId = transferLog.TransferId,
                 };
-                _context.BalanceLogs.Add(fromBalanceLog);
-                await _context.SaveChangesAsync();
+                _uow.BalanceLogs.Add(fromBalanceLog);
+                await _uow.SaveChangesAsync();
 
                 //加入轉入方紀錄
                 var toBalanceLog = new BalanceLog
@@ -97,34 +97,35 @@ namespace DotNetSandbox.Services
                     UserId = receiver.UserId,
                     Amount = req.Amount,
                     BalanceBefore = receiverBalanceBefore,
-                    Balance = receiverBalanceAfter,
+                    Balance = receiver.Balance,
                     Type = Models.Enums.BalanceType.TransferIn,
                     Description = req.Description ?? "",
                     Operator = operatorName ?? sender.Username,
                     CreatedAt = DateTime.Now,
                     TransactionId = transferLog.TransferId,
                 };
-                _context.BalanceLogs.Add(toBalanceLog);
-                await _context.SaveChangesAsync();
+                _uow.BalanceLogs.Add(toBalanceLog);
+                await _uow.SaveChangesAsync();
 
+                //轉帳紀錄ID重指定
                 transferLog.FromBalanceLogId = fromBalanceLog.BalanceId;
                 transferLog.ToBalanceLogId = toBalanceLog.BalanceId;
-                await _context.SaveChangesAsync();
+                _uow.TransferLogs.Update(transferLog);
+                await _uow.SaveChangesAsync();
 
-                await _context.Database.ExecuteSqlRawAsync(
-                        $"UPDATE [Users] SET Balance = {sender.Balance - req.Amount} WHERE UserId = {sender.UserId}"
-                    );
-                await _context.Database.ExecuteSqlRawAsync(
-                        $"UPDATE [Users] SET Balance = {receiver.Balance + req.Amount} WHERE UserId = {receiver.UserId}"
-                    );
-                await _context.SaveChangesAsync();
+                //更新用戶帳戶
+                sender.Balance = sender.Balance;
+                receiver.Balance = receiver.Balance;
+                _uow.Users.Update(sender);
+                _uow.Users.Update(receiver);
+                await _uow.SaveChangesAsync();
 
-                await transaction.CommitAsync();                //成功
+                await _uow.CommitTransactionAsync();                //實際DB操作
                 return SystemResponse<UserBalanceDTO>.Ok();
             }
-            catch (Exception e)
+            catch
             {
-                await transaction.RollbackAsync();              //取消交易
+                await _uow.RollBackTransactionAsync();             //取消交易
                 throw;
             }
         }

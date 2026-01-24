@@ -25,5 +25,10 @@ namespace DotNetSandbox.Repositories
         {
             _dbSet.Update(entity);
         }
+
+        public void Add(T entity)
+        {
+            _dbSet.Add(entity);
+        }
     }
 }

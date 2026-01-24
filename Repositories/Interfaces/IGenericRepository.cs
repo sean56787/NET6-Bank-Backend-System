@@ -4,5 +4,6 @@
     {
         Task<T?> GetByIdAsync(object id);
         void Update(T entity);
+        void Add(T entity);
     }
 }
