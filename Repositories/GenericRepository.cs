@@ -1,7 +1,7 @@
-﻿using DotNetSandbox.Repositories.Interfaces;
-using DotNetSandbox.Data;
+﻿using DotNetSandbox.Data;
+using DotNetSandbox.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using DotNetSandbox.Models.Data;
+using System.Linq.Expressions;
 
 namespace DotNetSandbox.Repositories
 {
@@ -20,6 +20,12 @@ namespace DotNetSandbox.Repositories
         {
             return await _dbSet.FindAsync(id);
         }
+
+        public async Task<bool> AnyAsync(Expression<Func<T,bool>> predicate)
+        {
+            return await _dbSet.AnyAsync(predicate);
+        }
+        
         
         public void Update(T entity)
         {

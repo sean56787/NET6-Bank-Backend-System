@@ -6,6 +6,7 @@ using DotNetSandbox.Models.DTOs.Input;
 using DotNetSandbox.Services.CustomResponse;
 using Microsoft.EntityFrameworkCore;
 using DotNetSandbox.Repositories.Interfaces;
+using EntityFramework.Exceptions.Common;
 
 namespace DotNetSandbox.Services
 {
@@ -35,8 +36,19 @@ namespace DotNetSandbox.Services
 
         public async Task<SystemResponse<UserBalanceDTO>> C2CTransferAsync(TransferRequest req, string? operatorName)
         {
-            await _uow.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);// 建立交易控制
-                
+            if (string.IsNullOrEmpty(req.RequestKey))
+            {
+                return SystemResponse<UserBalanceDTO>.Error(message: "缺少請求唯一標識", statusCode: 401);
+            }
+
+            var isProcessed = await _uow.TransferLogs.AnyAsync(x => x.RequestKey == req.RequestKey);
+            if (isProcessed)
+            {
+                return SystemResponse<UserBalanceDTO>.Error(message: "重複請求，請稍後再試", statusCode: 429);
+            }
+
+            await _uow.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);      // 建立交易控制-TODO: 將IsolationLevel改更寬鬆並配合rowVersion+TimeStamp
+
             try
             {
                 var userRepo = _uow.Users;
@@ -71,9 +83,9 @@ namespace DotNetSandbox.Services
                     Amount = req.Amount,
                     CreatedAt = DateTime.Now,
                     Description = req.Description ?? "",
+                    RequestKey = req.RequestKey,
                 };
                 _uow.TransferLogs.Add(transferLog);
-                await _uow.SaveChangesAsync();
 
                 //加入轉出方紀錄
                 var fromBalanceLog = new BalanceLog
@@ -89,7 +101,6 @@ namespace DotNetSandbox.Services
                     TransactionId = transferLog.TransferId,
                 };
                 _uow.BalanceLogs.Add(fromBalanceLog);
-                await _uow.SaveChangesAsync();
 
                 //加入轉入方紀錄
                 var toBalanceLog = new BalanceLog
@@ -105,25 +116,33 @@ namespace DotNetSandbox.Services
                     TransactionId = transferLog.TransferId,
                 };
                 _uow.BalanceLogs.Add(toBalanceLog);
-                await _uow.SaveChangesAsync();
 
                 //轉帳紀錄ID重指定
                 transferLog.FromBalanceLogId = fromBalanceLog.BalanceId;
                 transferLog.ToBalanceLogId = toBalanceLog.BalanceId;
                 _uow.TransferLogs.Update(transferLog);
-                await _uow.SaveChangesAsync();
 
-                //更新用戶帳戶
-                sender.Balance = sender.Balance;
-                receiver.Balance = receiver.Balance;
-                _uow.Users.Update(sender);
-                _uow.Users.Update(receiver);
-                await _uow.SaveChangesAsync();
+                //更新用戶帳戶-停用，SaveChangesAsync() 會自動追蹤實體變更
+                //sender.Balance = sender.Balance;
+                //receiver.Balance = receiver.Balance;
+                //_uow.Users.Update(sender);
+                //_uow.Users.Update(receiver);
 
+                await _uow.SaveChangesAsync();                      
                 await _uow.CommitTransactionAsync();                //實際DB操作
                 return SystemResponse<UserBalanceDTO>.Ok();
             }
-            catch
+            catch(DbUpdateConcurrencyException cccEx)
+            {
+                await _uow.RollBackTransactionAsync();
+                return SystemResponse<UserBalanceDTO>.Error(message: "system busy, try later", statusCode: 500);
+            }
+            catch(UniqueConstraintException ucEx)
+            {
+                await _uow.RollBackTransactionAsync();
+                return SystemResponse<UserBalanceDTO>.Error(message: "請求處理中或已完成", statusCode: 500);
+            }
+            catch(Exception ex)
             {
                 await _uow.RollBackTransactionAsync();             //取消交易
                 throw;

@@ -15,5 +15,9 @@ namespace DotNetSandbox.Models.Data
         public int? ToBalanceLogId { get; set; }
         public BalanceLog? FromBalanceLog { get; set; }
         public BalanceLog? ToBalanceLog { get; set; }
+
+        [Required]
+        [StringLength(64)]
+        public string RequestKey { get; set; }
     }
 }

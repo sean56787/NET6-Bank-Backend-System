@@ -20,8 +20,13 @@ namespace DotNetSandbox.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<User>().Property(u => u.Role).HasConversion<string>(); // 後續所有_context.add() 在遇到 User.Role都會用字串儲存
-            modelBuilder.Entity<BalanceLog>().Property(b => b.Type).HasConversion<string>();
+            modelBuilder.Entity<User>()
+                .Property(u => u.Role)
+                .HasConversion<string>(); // 後續所有_context.add() 在遇到 User.Role都會用字串儲存
+
+            modelBuilder.Entity<BalanceLog>()
+                .Property(b => b.Type)
+                .HasConversion<string>();
 
             modelBuilder.Entity<BalanceLog>()
                 .HasOne(b => b.User)
@@ -29,6 +34,10 @@ namespace DotNetSandbox.Data
                 .HasForeignKey(b => b.UserId) //外鍵
                 .HasPrincipalKey(u => u.UserId)
                 .OnDelete(DeleteBehavior.Cascade); //父表不存在時連同刪除子表
+
+            modelBuilder.Entity<UserBalanceTransferLog>()
+                .HasIndex(ubt => ubt.RequestKey)
+                .IsUnique();
         }
     }
 }
