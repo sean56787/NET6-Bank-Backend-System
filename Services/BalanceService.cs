@@ -17,7 +17,6 @@ namespace DotNetSandbox.Services
         private readonly IUserWithdrawCheck _withdrawCheck;
         private readonly IUserDepositCheck _depositCheck;
         private readonly IUserTransferCheck _transferCheck;
-        private readonly IBalanceRepository _balanceRepositories;
         private readonly IServiceCommandCenter _serviceCommandCenter;
 
         public BalanceService(AppDbContext context, 
@@ -32,7 +31,6 @@ namespace DotNetSandbox.Services
             _withdrawCheck = withdrawCheck;
             _depositCheck = depositCheck;
             _transferCheck = transferCheck;
-            _balanceRepositories = balanceRepositories;
             _uow = uow;
             _serviceCommandCenter = serviceCommandCenter;
         }
@@ -42,7 +40,7 @@ namespace DotNetSandbox.Services
             var RequestKeyCheck = await _serviceCommandCenter.RequestKeyCheck(req.RequestKey);
             if (!RequestKeyCheck.Success)
             {
-                return SystemResponse.Error(message: RequestKeyCheck.Message, statusCode: RequestKeyCheck.StatusCode);
+                return SystemResponse.Error(message: RequestKeyCheck.Message ?? "", statusCode: RequestKeyCheck.StatusCode);
             }
 
             await _uow.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);      // 建立交易控制-TODO: 將IsolationLevel改更寬鬆並配合rowVersion+TimeStamp
@@ -165,7 +163,7 @@ namespace DotNetSandbox.Services
                     return SystemResponse.NotFound("user not found");
                 }
 
-                //確認是否可以Draw
+                //withdraw check
                 var ValidDrawCheck = await _withdrawCheck.IsValidOperation(req);
                 if (ValidDrawCheck == null)
                 {
@@ -178,7 +176,7 @@ namespace DotNetSandbox.Services
 
                 //紀錄動作前餘額
                 var BalanceBefore = user.Balance;
-                //更改餘額
+                //提款-更改餘額
                 user.Balance -= req.Amount;
                 await _uow.SaveChangesAsync();
 
@@ -216,39 +214,44 @@ namespace DotNetSandbox.Services
             }
         }
 
-        public async Task<SystemResponse<UserBalanceDTO>> DepositAsync(DepositRequest req, string? operatorName)
+        public async Task<SystemResponse> DepositAsync(DepositRequest req, string? operatorName)
         {
 
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.UserId);
-
-            if (user == null)
+            var RequestKeyCheck = await _serviceCommandCenter.RequestKeyCheck(req.RequestKey);
+            if (!RequestKeyCheck.Success)
             {
-                return SystemResponse<UserBalanceDTO>.NotFound("user not found");
-            }
-            var BalanceBefore = user.Balance;
-            var IsValidDeposit = await _depositCheck.IsValidOperation(req);
-
-            if (IsValidDeposit == null)
-            {
-                return SystemResponse<UserBalanceDTO>.Error(message: "server error", statusCode: 500);
-            }
-            else if (!IsValidDeposit.StatusCode.Equals(200))
-            {
-                return IsValidDeposit;
+                return SystemResponse.Error(message: RequestKeyCheck.Message ?? "", statusCode: RequestKeyCheck.StatusCode);
             }
 
-            using var transaction = _context.Database.BeginTransaction(System.Data.IsolationLevel.Serializable);
+            await _uow.BeginTransactionAsync(System.Data.IsolationLevel.Serializable); // 序列化 > 阻擋其他交易的寫入 > 一致性 > 鎖住整個資料範圍(最嚴格)
 
             try
             {
-                decimal UserUpdatedBalance = user.Balance + req.Amount;
-                await _context.Database
-                    .ExecuteSqlRawAsync(
-                        $"UPDATE Users SET Balance = {UserUpdatedBalance} WHERE UserId = {user.UserId}"
-                    );
-                await _context.SaveChangesAsync();
+                //找User
+                var user = await _uow.Users.GetByIdAsync(req.UserId);
+                if (user == null)
+                {
+                    return SystemResponse.NotFound("user not found");
+                }
 
-                _context.BalanceLogs.Add(new BalanceLog
+                //deposit check
+                var ValidDepositCheck = await _depositCheck.IsValidOperation(req);
+                if (ValidDepositCheck == null)
+                {
+                    return SystemResponse.Error(message: "server error", statusCode: 500);
+                }
+                else if (!ValidDepositCheck.StatusCode.Equals(200))
+                {
+                    return ValidDepositCheck;
+                }
+
+                //紀錄動作前餘額
+                var BalanceBefore = user.Balance;
+                //存款-更改餘額
+                user.Balance += req.Amount;
+                await _uow.SaveChangesAsync();
+
+                _uow.BalanceLogs.Add(new BalanceLog
                 {
                     UserId = user.UserId,
                     Amount = req.Amount,
@@ -259,28 +262,36 @@ namespace DotNetSandbox.Services
                     CreatedAt = DateTime.Now,
                     Operator = operatorName ?? user.Username,
                 });
-                await _context.SaveChangesAsync();              //確認提交
 
-                await transaction.CommitAsync();
+                await _uow.SaveChangesAsync();
+                await _uow.CommitTransactionAsync();                //確認提交
 
-                var result = new UserBalanceDTO
-                {
-                    UserId = user.UserId,
-                    Username = user.Username,
-                    Type = req.Type,
-                    BalanceBeforeOperation = BalanceBefore,
-                    Balance = user.Balance,
-                };
-
-                return SystemResponse<UserBalanceDTO>.Ok(result, message: "deposit successful");
+                return SystemResponse.Ok(message: "deposit successful");
             }
-            catch (Exception e)
+            catch (DbUpdateConcurrencyException cccEx)
             {
-                await transaction.RollbackAsync();              //取消交易
+                await _uow.RollBackTransactionAsync();
+                return SystemResponse.Error(message: "system busy, try later", statusCode: 500);
+            }
+            catch (UniqueConstraintException ucEx)
+            {
+                await _uow.RollBackTransactionAsync();
+                return SystemResponse.Error(message: "請求處理中或已完成", statusCode: 500);
+            }
+            catch (Exception ex)
+            {
+                await _uow.RollBackTransactionAsync();             //取消交易
                 throw;
             }
         }
 
+        /// <summary>
+        /// 後台調整用戶餘額-暫時停用
+        /// </summary>
+        /// <param name="req"></param>
+        /// <param name="operatorName"></param>
+        /// <returns></returns>
+        /*
         public async Task<SystemResponse<UserBalanceDTO>> AdjustBalanceAsync(AdjustBalanceRequest req, string? operatorName)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.UserId);
@@ -329,10 +340,11 @@ namespace DotNetSandbox.Services
                 throw;
             }
         }
+        */
 
         public async Task<SystemResponse<UserTransactionDTO>> GetTransactions(TransactionsRequest req, string? operatorName)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == req.UserId);
+            var user = await _uow.Users.GetByIdAsync(req.UserId);
 
             if (user == null)
             {
